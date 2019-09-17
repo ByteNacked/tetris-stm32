@@ -118,9 +118,6 @@ pub struct CFGR {
     adcclk: Option<u32>,
 }
 
-static mut dbg_sclk : u32 = 0;
-static mut dbg_hclk : u32 = 0;
-
 impl CFGR {
     /// Uses HSE (external oscillator) instead of HSI (internal RC oscillator) as the clock source.
     /// Will result in a hang if an external oscillator is not connected or it fails to start.
@@ -177,40 +174,80 @@ impl CFGR {
         self
     }
 
-    pub fn my_freeze(self, acr: &mut ACR) -> Clocks {
+    pub fn freeze_72Mhz_nousb(self, acr: &mut ACR) -> Clocks {
+
+        //72 Mhz setup, w/o usb
         let hclk: u32 = 72_000_000;
-        let pclk1: u32 = 32_000_000;
-        let pclk2: u32 = 32_000_000;
-        let ppre1: u8 = 0;
-        let ppre2: u8 = 0;
+        let hpre_bits : u8 = 0b0;
+        let pclk1: u32 = 36_000_000;
+        let pclk2: u32 = 36_000_000;
+        let ppre1: u8 = 2;
+        let ppre1_bits: u8 = 0b100;
+        let ppre2: u8 = 2;
+        let ppre2_bits: u8 = 0b100;
         let sysclk: u32 = 72_000_000;
-        let adcclk: u32 = 32_000_000;
+        let adcclk: u32 = 0;
         let usbclk_valid: bool = false;
 
-        //// set prescalers and clock source
-        //#[cfg(feature = "stm32f103")]
-        //rcc.cfgr.modify(|_, w| unsafe {
-        //    w.adcpre().bits(apre_bits);
-        //    w.ppre2()
-        //        .bits(ppre2_bits)
-        //        .ppre1()
-        //        .bits(ppre1_bits)
-        //        .hpre()
-        //        .bits(hpre_bits)
-        //        .usbpre()
-        //        .bit(usbpre)
-        //        .sw()
-        //        .bits(if pllmul_bits.is_some() {
-        //            // PLL
-        //            0b10
-        //        } else if self.hse.is_some() {
-        //            // HSE
-        //            0b1
-        //        } else {
-        //            // HSI
-        //            0b0
-        //        })
-        //});
+        let rcc = unsafe { &*RCC::ptr() };
+
+        if true {
+            rcc.cr.modify(|_, w| w.hseon().set_bit());
+            while rcc.cr.read().hserdy().bit_is_clear() {}
+        }
+
+        let pllmul_bits : u8 = 0b0111; // x9 pll-mult
+        if true {
+            // enable PLL and wait for it to be ready
+            rcc.cfgr.modify(|_, w|
+                w.pllmul()
+                    .bits(pllmul_bits)
+                    .pllsrc()
+                    .bit(if true { true } else { false }) //hse - 1 / hsi - 0
+                    .pllxtpre().div2()
+            );
+
+            rcc.cr.modify(|_, w| w.pllon().set_bit());
+
+            while rcc.cr.read().pllrdy().bit_is_clear() {}
+        }
+
+        // adjust flash wait state
+        #[cfg(feature = "stm32f103")]
+        unsafe {
+            acr.acr().write(|w| {
+                w.latency().bits(if sysclk <= 24_000_000 {
+                    0b000
+                } else if sysclk <= 48_000_000 {
+                    0b001
+                } else {
+                    0b010
+                })
+            })
+        }
+
+        // set prescalers and clock source
+        #[cfg(feature = "stm32f103")]
+        rcc.cfgr.modify(|_, w| unsafe {
+            //w.adcpre().bits(apre_bits);
+            w.ppre2()
+                .bits(ppre2_bits)
+                .ppre1()
+                .bits(ppre1_bits)
+                .hpre()
+                .bits(hpre_bits)
+                //.usbpre()
+                //.bit(usbpre)
+                .sw()
+                .bits(
+                    // PLL
+                    0b10
+                    // HSE
+                    //0b1
+                    // HSI
+                    //0b0
+                )
+        });
 
         Clocks {
             hclk: Hertz(hclk),

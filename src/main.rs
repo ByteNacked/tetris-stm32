@@ -1,6 +1,9 @@
 #![no_std]
 #![no_main]
 
+extern crate jlink_rtt;
+extern crate panic_rtt;
+
 use core::panic::PanicInfo;
 use cortex_m::asm;
 use cortex_m_rt::entry;
@@ -13,13 +16,13 @@ use stm32f1xx_hal::{
     stm32,
 };
 
-#[panic_handler]
-#[inline(never)]
-fn panic(_info: &PanicInfo) -> ! {
-    #[cfg(debug_assertions)]
-    cortex_m::asm::bkpt();
-    loop {}
-}
+//#[panic_handler]
+//#[inline(never)]
+//fn panic(_info: &PanicInfo) -> ! {
+//    #[cfg(debug_assertions)]
+//    cortex_m::asm::bkpt();
+//    loop {}
+//}
 
 #[entry]
 fn main() -> ! {
@@ -31,17 +34,19 @@ fn main() -> ! {
 
     let clocks = rcc
         .cfgr
-        .use_hse(16.mhz())
-        .sysclk(72.mhz())
-        //.hclk(72.mhz())
-        .pclk1(36.mhz())
-        .pclk2(36.mhz())
-        .freeze(&mut flash.acr);
+        .freeze_72Mhz_nousb(&mut flash.acr);
 
     let mut gpiog = dp.GPIOG.split(&mut rcc.apb2);
 
     let mut led_red = gpiog.pg6.into_push_pull_output(&mut gpiog.crl);
     let mut led_green = gpiog.pg7.into_push_pull_output(&mut gpiog.crl);
+
+    {//TODO: move to macro
+        use core::fmt::Write;
+        let mut output = jlink_rtt::Output::new();
+        let _ = writeln!(&mut output, "Hello {}", 42);
+    }
+
     let mut timer = Timer::syst(cp.SYST, 1.hz(), clocks);
 
     loop {
