@@ -24,6 +24,55 @@ use stm32f1xx_hal::{
 //    loop {}
 //}
 
+#[derive(Debug)]
+struct TestA {
+    a : u32,
+    b : i8,
+    c : &'static str,
+    d : [u8; 3],
+    e : InnerB<'static>
+}
+
+#[derive(Debug)]
+enum TestVar {
+    Good,
+    Bad,
+    Ugly,
+}
+
+#[derive(Debug)]
+struct InnerB<'a> {
+    a : &'a str,
+    b : TestVar,
+}
+
+const TEST_STR : &'static str = "yellow tree";
+const TEST_A : TestA = TestA{
+    a : 246u32,
+    b : -8,
+    c : TEST_STR,
+    d : [3u8, 2u8, 1u8],
+    e : InnerB {
+        a : "boom",
+        b : TestVar::Ugly,
+    },
+};
+
+fn port_init(dp : pac::Peripherals) {
+    let rcc = dp.RCC;
+    //rcc.ahb2enr.write
+
+
+    //let mut gpiog = dp.GPIOG.split(rcc.apb2);
+    //let mut led_red = gpiog.pg6.into_push_pull_output(&mut gpiog.crl);
+    //let mut led_green = gpiog.pg7.into_push_pull_output(&mut gpiog.crl);
+
+}
+
+fn fsmc_init(dp : &pac::Peripherals) {
+
+}
+
 #[entry]
 fn main() -> ! {
     let cp = cortex_m::Peripherals::take().unwrap();
@@ -44,10 +93,10 @@ fn main() -> ! {
     {//TODO: move to macro
         use core::fmt::Write;
         let mut output = jlink_rtt::Output::new();
-        let _ = writeln!(&mut output, "Hello {}", 42);
+        let _ = writeln!(&mut output, "Hello {:?}", &TEST_A);
     }
 
-    let mut timer = Timer::syst(cp.SYST, 1.hz(), clocks);
+    let mut timer = Timer::syst(cp.SYST, 10.hz(), clocks);
 
     loop {
         block!(timer.wait()).unwrap();

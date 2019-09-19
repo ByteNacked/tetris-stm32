@@ -1,21 +1,18 @@
 Breakpoint=874311772: 21: 0, State=BP_STATE_ON
 OpenDocument="main.rs", FilePath="/home/romanm/rust_proj/tetris-micro/src/main.rs", Line=0
 OpenDocument="syst.rs", FilePath="/home/romanm/.cargo/registry/src/github.com-1ecc6299db9ec823/cortex-m-0.6.1/src/peripheral/syst.rs", Line=110
-OpenDocument="lib.rs", FilePath="/home/romanm/.cargo/registry/src/github.com-1ecc6299db9ec823/cortex-m-rt-0.6.10/src/lib.rs", Line=468
-OpenDocument="atomic.rs", FilePath="/rustc/24a9bcbb7cb0d8bdc11b8252a9c13f7562c7e4ca/src/libcore/sync/atomic.rs", Line=0
+OpenDocument="lib.rs", FilePath="/home/romanm/.cargo/registry/src/github.com-1ecc6299db9ec823/cortex-m-rt-0.6.10/src/lib.rs", Line=0
 OpenDocument="timer.rs", FilePath="/home/romanm/rust_proj/tetris-micro/stm32f1xx-hal/src/timer.rs", Line=91
-OpenDocument="mod.rs", FilePath="/rustc/24a9bcbb7cb0d8bdc11b8252a9c13f7562c7e4ca/src/libcore/ptr/mod.rs", Line=0
-OpenDocument="cell.rs", FilePath="/rustc/24a9bcbb7cb0d8bdc11b8252a9c13f7562c7e4ca/src/libcore/cell.rs", Line=0
 OpenToolbar="Debug", Floating=0, x=0, y=0
-OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=0, w=792, h=458, FilterBarShown=0
-OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=1, w=792, h=367, FilterBarShown=0, ExecCountersShown=0
+OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=0, w=792, h=456, FilterBarShown=0
+OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=1, w=792, h=369, FilterBarShown=0, ExecCountersShown=0
 OpenWindow="Source", x=0, y=0, w=0, h=0, FilterBarShown=0, ExecCountersShown=0
 OpenWindow="Break & Tracepoints", DockArea=LEFT, x=0, y=0, w=725, h=203, FilterBarShown=0
 OpenWindow="Memory 1", DockArea=LEFT, x=0, y=3, w=725, h=203, FilterBarShown=0, EditorAddress=0x0
 OpenWindow="Functions", DockArea=LEFT, x=0, y=2, w=725, h=203, FilterBarShown=1
 OpenWindow="Memory Usage", DockArea=LEFT, x=0, y=1, w=725, h=204, FilterBarShown=0
 OpenWindow="Console", DockArea=BOTTOM, x=0, y=0, w=1920, h=109, FilterBarShown=0
-TableHeader="Break & Tracepoints", SortCol="None", SortOrder="ASCENDING", VisibleCols=["";"Type";"Location";"Extras"], ColWidths=[55;60;84;587]
+TableHeader="Break & Tracepoints", SortCol="None", SortOrder="ASCENDING", VisibleCols=["";"Type";"Location";"Extras"], ColWidths=[55;60;84;526]
 TableHeader="Functions", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Address";"Size";"#Insts";"Source"], ColWidths=[370;69;48;57;166]
 TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols=["Function";"Stack Frame";"Source";"PC";"Return Address";"Stack Used"], ColWidths=[508;220;196;136;307;73]
-TableHeader="tableWidgetSamples", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Channel 0"], ColWidths=[84;119;126]
+TableHeader="tableWidgetSamples", SortCol="Index", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Channel 0"], ColWidths=[84;119;126]
