@@ -136,7 +136,7 @@ fn port_init() {
    //TODO: registers 
 }
 
-fn fsmc_init(dp : &pac::Peripherals) {
+fn fsmc_init() {
     use stm32f1xx_hal::pac::{
         RCC,
         FSMC,
@@ -238,6 +238,9 @@ fn fsmc_init(dp : &pac::Peripherals) {
 
 #[entry]
 fn main() -> ! {
+    port_init();
+    fsmc_init();
+
     let cp = cortex_m::Peripherals::take().unwrap();
     let dp = pac::Peripherals::take().unwrap();
 
