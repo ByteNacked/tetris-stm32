@@ -70,6 +70,12 @@ impl Into<Hertz> for KiloHertz {
     }
 }
 
+impl Into<Hertz> for MilliSeconds {
+    fn into(self) -> Hertz {
+        Hertz(1000 / self.0)
+    }
+}
+
 impl Into<Hertz> for MegaHertz {
     fn into(self) -> Hertz {
         Hertz(self.0 * 1_000_000)
