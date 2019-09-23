@@ -21,7 +21,7 @@ pub const LCD_WIDTH : usize = 320;
 pub const LCD_HEIGHT : usize = 240;
 const FULL_SCREEN_RECT : Rect = Rect { x : 0, y : 0, w : LCD_WIDTH, h : LCD_HEIGHT };
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Rect {
     pub x : usize,
     pub y : usize,
@@ -60,7 +60,7 @@ impl Lcd {
 
     }
 
-    pub fn set_pixel(&mut self, x : usize, y : usize) {
+    pub fn set_pixel(&mut self, _x : usize, _y : usize) {
 
     }
 

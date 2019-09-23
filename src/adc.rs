@@ -1,7 +1,15 @@
 
 use stm32f1xx_hal::pac::{ RCC, ADC3, };
 use core::sync::atomic::{AtomicIsize, Ordering};
+use cortex_m::{ peripheral::NVIC, singleton};
+use stm32f1xx_hal::{
+    stm32::{ Interrupt, interrupt },
+};
 
+
+pub static mut ACCEL_ADC : Option<Adc> = None;
+
+#[derive(Debug)]
 pub struct Adc {
     x : AtomicIsize,
     y : AtomicIsize,
@@ -49,13 +57,49 @@ impl Adc {
              .jsq3().bits(6)  // ACCX    pin 32
              .jsq4().bits(8)  // Current pin G1
         });
+
+        // Interrupt
+        unsafe { NVIC::unmask(Interrupt::ADC3) };
     }
 
     pub fn start_conversion(& self) {
-
+        let adc3 = unsafe { &*ADC3::ptr() };
+        adc3.cr2.modify(|_, w| { 
+            w.adon().enabled() // Включаем АЦП
+        });
     }
 
     pub fn callback_conv_ready(& self) {
+        let adc3 = unsafe { &*ADC3::ptr() };
 
+        adc3.sr.modify(|_, w| { 
+            w.jeoc().clear() // Clear Injected channel end of conversion flag
+        });
+
+        let z = adc3.dr.read().bits() as i16 as isize - 2000;     // ACC Z
+        let y = adc3.jdr2.read().bits() as i16 as isize - 2000;   // ACC Y
+        let x = adc3.jdr3.read().bits() as i16 as isize - 2000;   // ACC X
+        let _c = adc3.jdr4.read().bits() as i32;   // Current
+        let _v = adc3.jdr1.read().bits() as i32;   // Voltage
+
+        self.x.store(x, Ordering::Relaxed);
+        self.y.store(y, Ordering::Relaxed);
+        self.z.store(z, Ordering::Relaxed);
+    }
+
+    pub fn get_axes(&self) -> (isize, isize, isize) {
+        (
+            self.x.load(Ordering::Relaxed),
+            self.y.load(Ordering::Relaxed),
+            self.z.load(Ordering::Relaxed),
+        )
     }
 }
+
+#[interrupt]
+fn ADC3() {
+    unsafe {
+        ACCEL_ADC.as_ref().unwrap().callback_conv_ready();
+    }
+}
+
