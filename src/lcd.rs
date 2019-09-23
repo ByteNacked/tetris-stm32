@@ -2,7 +2,24 @@
 
 use super::pause;
 use stm32f1xx_hal::prelude::*;
+use color::*;
 
+//   Ориентация:
+//  
+//    x
+//    o---------------------> width
+//  y |
+//    |
+//    |
+//    |
+//    |
+//    |  height
+//    Y
+//
+
+pub const LCD_WIDTH : usize = 320;
+pub const LCD_HEIGHT : usize = 240;
+const FULL_SCREEN_RECT : Rect = Rect { x : 0, y : 0, w : LCD_WIDTH, h : LCD_HEIGHT };
 
 #[derive(Copy, Clone)]
 pub struct Rect {
@@ -11,11 +28,6 @@ pub struct Rect {
     pub w : usize,
     pub h : usize,
 }
-
-
-const LCD_WIDTH : usize = 320;
-const LCD_HEIGHT : usize = 240;
-const FULL_SCREEN_RECT : Rect = Rect { x : 0, y : 0, w : LCD_WIDTH, h : LCD_HEIGHT };
 
 pub struct Lcd {}
 
@@ -54,13 +66,16 @@ impl Lcd {
 
     pub fn clear(&mut self) {
         let rect = FULL_SCREEN_RECT;
-        self.fill_rect_with_color(rect, 0b00000_111111_00000);
+        self.fill_rect_with_color(rect, Color::Black);
     }
 
     /// Заливка области установленным цветом
-    pub fn fill_rect_with_color(&mut self, rect : Rect ,color : u16) {
+    pub fn fill_rect_with_color<C>(&mut self, rect : Rect, color : C)  
+    where 
+        C : Into<u16>
+    {
         Self::set_rect(rect);
-        Self::fill_with_color(rect.w * rect.h, color);
+        Self::fill_with_color(rect.w * rect.h, color.into());
     }
 
     /// Инициализация контроллера дисплея
@@ -219,3 +234,33 @@ mod io {
     }
 }
 
+pub mod color {
+    pub enum Color {
+        White = 0b11111_111111_11111,
+        Black = 0b00000_000000_00000,
+        Green = 0b00000_111111_00000,
+        Blue  = 0b00000_000000_11111,
+        Red   = 0b11111_000000_00000,
+    }
+
+    impl Into<u16> for Color {
+        fn into(self) -> u16 {
+            self as u16
+        }
+    }
+
+    pub struct RGB(pub u8, pub u8, pub u8);
+
+    /// Переводим RGB в формат 5-6-5
+    impl Into<u16> for RGB {
+        fn into(self) -> u16 {
+            let r : u16 = (self.0 / 8) as u16;
+            let g : u16 = (self.1 / 4) as u16;
+            let b : u16 = (self.2 / 8) as u16;
+
+            (r << 11) & 0b11111_000000_00000 | 
+                (g << 6) & 0b00000_111111_00000 |
+                b & 0b00000_000000_11111
+        }
+    }
+}

@@ -1,23 +1,21 @@
-Breakpoint=874311772: 27: 0, State=BP_STATE_DISABLED
-OpenDocument="cell.rs", FilePath="/rustc/24a9bcbb7cb0d8bdc11b8252a9c13f7562c7e4ca/src/libcore/cell.rs", Line=0
-OpenDocument="mod.rs", FilePath="/home/romanm/.cargo/registry/src/github.com-1ecc6299db9ec823/cortex-m-0.6.1/src/peripheral/mod.rs", Line=447
-OpenDocument="time.rs", FilePath="/home/romanm/rust_proj/tetris-micro/stm32f1xx-hal/src/time.rs", Line=38
-OpenDocument="main.rs", FilePath="/home/romanm/rust_proj/tetris-micro/src/main.rs", Line=52
-OpenDocument="syst.rs", FilePath="/home/romanm/.cargo/registry/src/github.com-1ecc6299db9ec823/cortex-m-0.6.1/src/peripheral/syst.rs", Line=127
-OpenDocument="lib.rs", FilePath="/home/romanm/.cargo/registry/src/github.com-1ecc6299db9ec823/cortex-m-rt-0.6.10/src/lib.rs", Line=470
-OpenDocument="timer.rs", FilePath="/home/romanm/rust_proj/tetris-micro/stm32f1xx-hal/src/timer.rs", Line=79
+OpenDocument="main.rs", FilePath="/home/romanm/rust_proj/tetris-stm32/src/main.rs", Line=241
+OpenDocument="apb2enr.rs", FilePath="/home/romanm/.cargo/registry/src/github.com-1ecc6299db9ec823/stm32f1-0.8.0/src/stm32f103/rcc/apb2enr.rs", Line=358
+OpenDocument="mod.rs", FilePath="/rustc/8a58268b5ad9c4a240be349a633069d48991eb0c/src/libcore/ptr/mod.rs", Line=0
+OpenDocument="lib.rs", FilePath="/home/romanm/.cargo/registry/src/github.com-1ecc6299db9ec823/cortex-m-rt-0.6.10/src/lib.rs", Line=468
+OpenDocument="odr.rs", FilePath="/home/romanm/.cargo/registry/src/github.com-1ecc6299db9ec823/stm32f1-0.8.0/src/stm32f103/gpioa/odr.rs", Line=621
+OpenDocument="cr.rs", FilePath="/home/romanm/.cargo/registry/src/github.com-1ecc6299db9ec823/stm32f1-0.8.0/src/stm32f103/rcc/cr.rs", Line=264
 OpenToolbar="Debug", Floating=0, x=0, y=0
-OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=0, w=763, h=380, FilterBarShown=0
-OpenWindow="Registers 1", DockArea=RIGHT, x=0, y=0, w=763, h=380, FilterBarShown=0, FilteredItems=[], RefreshRate=1, ToolbarShown=1
-OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=1, w=763, h=324, FilterBarShown=0, ExecCountersShown=0
+OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=1, w=389, h=167, FilterBarShown=0
+OpenWindow="Registers 1", DockArea=RIGHT, x=0, y=0, w=389, h=396, FilterBarShown=0, FilteredItems=[], RefreshRate=1, ToolbarShown=1
+OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=2, w=389, h=263, FilterBarShown=0, ExecCountersShown=0
 OpenWindow="Source", x=0, y=0, w=0, h=0, FilterBarShown=0, ExecCountersShown=0
-OpenWindow="Break & Tracepoints", DockArea=LEFT, x=0, y=0, w=355, h=177, FilterBarShown=0
-OpenWindow="Memory 1", DockArea=LEFT, x=0, y=3, w=355, h=177, FilterBarShown=0, EditorAddress=0x0
-OpenWindow="Functions", DockArea=LEFT, x=0, y=2, w=355, h=177, FilterBarShown=1
-OpenWindow="Memory Usage", DockArea=LEFT, x=0, y=1, w=355, h=178, FilterBarShown=0
-OpenWindow="Terminal", DockArea=BOTTOM, x=0, y=0, w=1920, h=213, FilterBarShown=0
+OpenWindow="Break & Tracepoints", DockArea=LEFT, x=0, y=0, w=517, h=287, FilterBarShown=0
+OpenWindow="Memory 1", DockArea=LEFT, x=0, y=2, w=517, h=217, FilterBarShown=0, EditorAddress=0x0
+OpenWindow="Functions", DockArea=LEFT, x=0, y=1, w=517, h=305, FilterBarShown=1
+OpenWindow="Memory Usage", DockArea=LEFT, x=0, y=0, w=517, h=287, FilterBarShown=0
+OpenWindow="Terminal", DockArea=BOTTOM, x=0, y=0, w=2493, h=111, FilterBarShown=0
+TableHeader="Break & Tracepoints", SortCol="None", SortOrder="ASCENDING", VisibleCols=["";"Type";"Location";"Extras"], ColWidths=[55;60;84;318]
+TableHeader="Functions", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Address";"Size";"#Insts";"Source"], ColWidths=[370;69;48;57;147]
 TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols=["Function";"Stack Frame";"Source";"PC";"Return Address";"Stack Used"], ColWidths=[508;220;196;136;307;73]
-TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Auto";"Name";"Value";"Description"], ColWidths=[275;234;275;259]
-TableHeader="Break & Tracepoints", SortCol="None", SortOrder="ASCENDING", VisibleCols=["";"Type";"Location";"Extras"], ColWidths=[55;60;84;526]
-TableHeader="Functions", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Address";"Size";"#Insts";"Source"], ColWidths=[370;69;48;57;140]
 TableHeader="tableWidgetSamples", SortCol="Index", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Channel 0"], ColWidths=[84;119;126]
+TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Auto";"Value";"Address";"Description"], ColWidths=[257;42;84;152;259]
