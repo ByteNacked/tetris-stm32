@@ -90,8 +90,9 @@ fn main() -> ! {
     let mut lcd = Lcd::new();
     lcd.init();
     lcd.fill_rect_with_color(Rect{x : LCD_WIDTH - 50, y : LCD_HEIGHT - 70, w : 50, h : 70}, 0b001111u16);
-    lcd.fill_rect_with_color(Rect{x : 100, y : 100, w : 50, h : 70}, RGB(30, 220, 50));
-    let mut red = Rect{x : 50, y : 50, w : 50, h : 70};
+    let mut green = Rect{x : 100, y : 100, w : 25, h : 25};
+    lcd.fill_rect_with_color(green, RGB(30, 220, 50));
+    let mut red = Rect{x : 50, y : 50, w : 25, h : 25};
     lcd.fill_rect_with_color(red, Color::Red);
     loop {
         //pause(500.ms());
@@ -101,23 +102,37 @@ fn main() -> ! {
         //let _ = led_green.set_low();
         //let _ = led_red.set_high();
 
-        pause(1000.ms());
+        pause(30.ms());
         lcd.fill_rect_with_color(red, Color::Black);
-        unsafe { adc::ACCEL_ADC.as_mut().unwrap().start_conversion() };
-        let (_, y, _) = unsafe { adc::ACCEL_ADC.as_mut().unwrap().get_axes() };
-        let y = if y < 50 && y > -50 { 0 } else { y };
+        lcd.fill_rect_with_color(green, Color::Black);
 
-        let yy = red.y as isize + (y / 4) * y.signum();
-        if  yy < LCD_HEIGHT as isize && yy >= 0 {
-            red.y = yy as usize;
-        }
+        unsafe { adc::ACCEL_ADC.as_mut().unwrap().start_conversion() };
+        let (_, y, x) = unsafe { adc::ACCEL_ADC.as_mut().unwrap().get_axes() };
+        let dy = if y < 50 && y > -50 { 0 } else { y };
+        let dx = if x < 50 && x > -50 { 0 } else { x };
+
+        let yy : isize = red.y as isize + (dy / 16);
+        red.y = if yy + red.h as isize > LCD_HEIGHT as isize {
+            LCD_HEIGHT - red.h
+        } 
+        else if yy < 0 { 0 }
+        else { yy as usize };
+
+        let xx : isize = green.x as isize + 20 * dx.signum();
+        green.x = if xx + green.w as isize > LCD_WIDTH as isize {
+            LCD_WIDTH - green.w
+        } 
+        else if xx < 0 { 0 }
+        else { xx as usize };
 
         lcd.fill_rect_with_color(red, Color::Red);
+        lcd.fill_rect_with_color(green, Color::Green);
         use core::fmt::Write;
         let mut output = jlink_rtt::Output::new();
         let _ = writeln!(&mut output, "{:?}", unsafe { adc::ACCEL_ADC.as_ref().unwrap() } );
-        let _ = writeln!(&mut output, "{:?}", &red);
-        let _ = writeln!(&mut output, "{:?}", &y);
+        let _ = writeln!(&mut output, "Red : {:?}", &red);
+        let _ = writeln!(&mut output, "Grn : {:?}", &green);
+        let _ = writeln!(&mut output, "y : {:?}, x : {:?}", &y, &x);
 
     }
 }
