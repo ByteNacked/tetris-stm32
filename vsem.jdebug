@@ -15,13 +15,13 @@ void OnProjectLoad (void) {
   Project.SetDevice ("STM32F103ZG");
   Project.SetHostIF ("USB", "");
   Project.SetTargetIF ("JTAG");
-  Project.SetTIFSpeed ("4000 kHz");
+  Project.SetTIFSpeed ("4 MHz");
   Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M3.svd");
   Project.AddSvdFile ("$(InstallDir)/Config/Peripherals/STM32F103xx.svd");
   Project.AddPathSubstitute ("/home/romanm", "$(ProjectDir)");
   Project.AddPathSubstitute ("/home/romanm", "$(ProjectDir)");
 
-  Project.SetJLinkScript("./JLinkSettings.JLinkScript"); 
+  Project.SetJLinkScript("./JLinkSettings.JLinkScript");
 
   //
   // User settings

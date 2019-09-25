@@ -217,12 +217,15 @@ pub fn fsmc_init() {
          .mtyp().flash()
          .mwid().bits16()
          .wren().enabled()
-         .extmod().enabled()
+         .extmod().disabled()
     });
     fsmc.btr1.modify(|_, w| unsafe {
-        w.addset().bits(12)
-         .datast().bits(15)
-         .addhld().bits(12)
+        w.addset().bits(1)
+         .datast().bits(1)
+         .addhld().bits(1)
+         //.clkdiv().bits(1)
+         //.busturn().bits(1)
+         //.datlat().bits(0)
          .accmod().a()
     });
 

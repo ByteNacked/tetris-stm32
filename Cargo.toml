@@ -23,6 +23,7 @@ features = ["stm32f103", "rt"]
 
 [patch.crates-io]
 stm32f1xx-hal = { path = "stm32f1xx-hal" }
+jlink_rtt = { path = "jlink_rtt-0.1.0" }
 
 [[bin]]
 name = "tetris-micro"

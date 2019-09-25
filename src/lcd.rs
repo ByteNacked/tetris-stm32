@@ -33,7 +33,7 @@ pub struct Lcd {}
 
 impl Lcd {
 
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Lcd {}
     }
 

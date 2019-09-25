@@ -21,11 +21,13 @@ use stm32f1xx_hal::{
     timer::{ Timer, Event},
     stm32,
     stm32::interrupt,
-    stm32::Interrupt
+    stm32::Interrupt,
+    rtc::Rtc,
 };
 use port::*;
 use pause::pause;
 use lcd::{Lcd, LCD_WIDTH, LCD_HEIGHT, Rect, color::*};
+use jlink_rtt::rtt_print;
 
 //#[panic_handler]
 //#[inline(never)]
@@ -51,7 +53,7 @@ fn main() -> ! {
     let mut flash = dp.FLASH.constrain();
     let mut rcc = dp.RCC.constrain();
 
-    //let mut nvic = cp.NVIC;
+    let mut nvic = cp.NVIC;
     //nvic.enable(Interrupt::USB_LP_CAN_RX0);
 
     let clocks = rcc
@@ -60,17 +62,26 @@ fn main() -> ! {
 
     let mut gpiog = dp.GPIOG.split(&mut rcc.apb2);
 
-    let mut _led_red = gpiog.pg6.into_push_pull_output(&mut gpiog.crl);
-    let mut _led_green = gpiog.pg7.into_push_pull_output(&mut gpiog.crl);
+    let mut led_red = gpiog.pg6.into_push_pull_output(&mut gpiog.crl);
+    let mut led_green = gpiog.pg7.into_push_pull_output(&mut gpiog.crl);
 
     //{//TODO: move to macro
     //    use core::fmt::Write;
     //    let mut output = jlink_rtt::Output::new();
     //    let _ = writeln!(&mut output, "Hello {:?}", &TEST_A);
     //}
+    let mut pwr = dp.PWR;
+    let mut backup_domain = rcc.bkp.constrain(dp.BKP, &mut rcc.apb1, &mut pwr);
+
+    unsafe { RTC = Some(Rtc::rtc(dp.RTC, &mut backup_domain))};
+
+    let mut rtc = unsafe { &mut RTC.as_mut().unwrap() };
+    rtc.listen_seconds();
+    nvic.enable(Interrupt::RTC);
 
     let mut systick = Timer::syst(cp.SYST, 1000.hz(), clocks);
     systick.listen(Event::Update);
+
 
     unsafe {
         if let None = TIMER_PAUSE {
@@ -87,61 +98,105 @@ fn main() -> ! {
     }
 
 
-    let mut lcd = Lcd::new();
+    let mut green = unsafe { &mut GREEN };
+    let mut red = unsafe { &mut RED };
+    let mut blue = unsafe { &mut BLUE };
+
+    let mut lcd = unsafe { &mut LCD };
+
     lcd.init();
-    lcd.fill_rect_with_color(Rect{x : LCD_WIDTH - 50, y : LCD_HEIGHT - 70, w : 50, h : 70}, 0b001111u16);
-    let mut green = Rect{x : 100, y : 100, w : 25, h : 25};
-    lcd.fill_rect_with_color(green, RGB(30, 220, 50));
-    let mut red = Rect{x : 50, y : 50, w : 25, h : 25};
-    lcd.fill_rect_with_color(red, Color::Red);
+    lcd.fill_rect_with_color(*blue, 0b001111u16);
+    lcd.fill_rect_with_color(*green, RGB(30, 220, 50));
+    lcd.fill_rect_with_color(*red, Color::Red);
+
+    unsafe { TIM2 = Some(Timer::tim2(dp.TIM2, 15.hz(), clocks, &mut rcc.apb1)) };
+    let mut tim2 = unsafe { TIM2.as_mut().unwrap() };
+    tim2.listen(Event::Update);
+    unsafe { nvic.set_priority(Interrupt::TIM2, 3 << 4) };
+    nvic.enable(Interrupt::TIM2);
+
     loop {
-        //pause(500.ms());
-        //let _ = led_green.set_high();
-        //let _ = led_red.set_low();
-        //pause(500.ms());
-        //let _ = led_green.set_low();
-        //let _ = led_red.set_high();
-
-        pause(30.ms());
-        lcd.fill_rect_with_color(red, Color::Black);
-        lcd.fill_rect_with_color(green, Color::Black);
-
-        unsafe { adc::ACCEL_ADC.as_mut().unwrap().start_conversion() };
-        let (_, y, x) = unsafe { adc::ACCEL_ADC.as_mut().unwrap().get_axes() };
-        let dy = if y < 50 && y > -50 { 0 } else { y };
-        let dx = if x < 50 && x > -50 { 0 } else { x };
-
-        let yy : isize = red.y as isize + (dy / 16);
-        red.y = if yy + red.h as isize > LCD_HEIGHT as isize {
-            LCD_HEIGHT - red.h
-        } 
-        else if yy < 0 { 0 }
-        else { yy as usize };
-
-        let xx : isize = green.x as isize + 20 * dx.signum();
-        green.x = if xx + green.w as isize > LCD_WIDTH as isize {
-            LCD_WIDTH - green.w
-        } 
-        else if xx < 0 { 0 }
-        else { xx as usize };
-
-        lcd.fill_rect_with_color(red, Color::Red);
-        lcd.fill_rect_with_color(green, Color::Green);
-        use core::fmt::Write;
-        let mut output = jlink_rtt::Output::new();
-        let _ = writeln!(&mut output, "{:?}", unsafe { adc::ACCEL_ADC.as_ref().unwrap() } );
-        let _ = writeln!(&mut output, "Red : {:?}", &red);
-        let _ = writeln!(&mut output, "Grn : {:?}", &green);
-        let _ = writeln!(&mut output, "y : {:?}, x : {:?}", &y, &x);
-
+        pause(500.ms());
+        let _ = led_green.set_high();
+        let _ = led_red.set_low();
+        pause(500.ms());
+        let _ = led_green.set_low();
+        let _ = led_red.set_high();
+        //pause(30.ms());
     }
 }
 
+static mut BLUE : Rect = Rect{x : LCD_WIDTH - 50, y : LCD_HEIGHT - 70, w : 50, h : 70};
+static mut GREEN : Rect = Rect{x : 100, y : 100, w : 25, h : 25};
+static mut RED : Rect = Rect{x : 50, y : 50, w : 25, h : 25};
+static mut LCD : Lcd = Lcd::new();
+static mut RTC : Option<Rtc> = None;
+static mut TIM2 : Option<Timer<pac::TIM2>> = None;
+
+fn game_iter(tick : u32) {
+    let mut green = unsafe { &mut GREEN };
+    let mut red = unsafe { &mut RED };
+    let mut blue = unsafe { &mut BLUE };
+
+    let mut lcd = unsafe { &mut LCD };
+
+    let prev_red = *red;
+    let prev_green = *green;
+
+    unsafe { adc::ACCEL_ADC.as_mut().unwrap().start_conversion() };
+    let (_, y, x) = unsafe { adc::ACCEL_ADC.as_mut().unwrap().get_axes() };
+    let dy = if y < 50 && y > -50 { 0 } else { y };
+    let dx = if x < 50 && x > -50 { 0 } else { x };
+
+    let yy : isize = red.y as isize + (dy / 8);
+    red.y = if yy + red.h as isize > LCD_HEIGHT as isize {
+        LCD_HEIGHT - red.h
+    } 
+    else if yy < 0 { 0 }
+    else { yy as usize };
+
+    let xx : isize = green.x as isize + 20 * dx.signum();
+    green.x = if xx + green.w as isize > LCD_WIDTH as isize {
+        LCD_WIDTH - green.w
+    } 
+    else if xx < 0 { 0 }
+    else { xx as usize };
+
+    cortex_m::interrupt::free(|_| {
+        lcd.fill_rect_with_color(prev_red, Color::Black);
+        lcd.fill_rect_with_color(prev_green, Color::Black);
+        lcd.fill_rect_with_color(*red, Color::Red);
+        lcd.fill_rect_with_color(*green, Color::Green);
+    });
+
+    //if tick % 100 == 0 {
+    //    let _ = rtt_print!("{:?}", unsafe { adc::ACCEL_ADC.as_ref().unwrap() } );
+    //    let _ = rtt_print!("Red : {:?}", red);
+    //    let _ = rtt_print!("Grn : {:?}", green);
+    //    let _ = rtt_print!("y : {:?}, x : {:?}", &y, &x);
+    //}
+}
+
+
+static mut DBG_TICK : u32 = 0;
 //INTERRUPTS
 #[interrupt]
 fn TIM2() {
-    static mut DBG_SYSTICK : u32 = 0;
-    *DBG_SYSTICK += 1;
+    unsafe { TIM2.as_mut().unwrap().clear_update_interrupt_flag() };
+
+    game_iter(unsafe { DBG_TICK });
+    unsafe { DBG_TICK += 1; }
+}
+
+#[interrupt]
+fn RTC() {
+    let mut rtc = unsafe { &mut RTC.as_mut().unwrap() };
+    rtc.clear_second_flag();
+
+    let res = unsafe { DBG_TICK };
+    unsafe { DBG_TICK = 0; }
+
+    //let _ = rtt_print!("TIM2 hz: {}", res);
 }
 
 #[exception]
