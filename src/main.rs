@@ -26,7 +26,7 @@ use stm32f1xx_hal::{
 };
 use port::*;
 use pause::pause;
-use lcd::{Lcd, LCD_WIDTH, LCD_HEIGHT, Rect, color::*};
+use lcd::{Lcd, LCD_WIDTH, LCD_HEIGHT, FULL_SCREEN_RECT, Rect, color::*};
 use jlink_rtt::rtt_print;
 
 //#[panic_handler]
@@ -37,9 +37,21 @@ use jlink_rtt::rtt_print;
 //    loop {}
 //}
 
-
 static mut TIMER_PAUSE: Option<Timer<pac::TIM1>> = None;
+const RUST_LOGO : &'static[u8] = include_bytes!("../pic/rust-logo-white_t.bmp");
+const RUST_EVA : &'static[u8] = include_bytes!("../pic/rust_eva_logo-t.bmp");
+const RUST_EMB_240X289 : &'static[u8] = include_bytes!("../pic/rust_emb_240x289_t.bmp");
+const RUST_BROWN : &'static[u8] = include_bytes!("../pic/rust_rust_200x200_t.bmp");
 
+unsafe fn from_u8_slice(slice : &[u8]) -> &[u16] {
+    use core::slice::from_raw_parts;
+    use core::mem::{size_of, transmute};
+
+    let ptr : * const u16 = unsafe { transmute(slice.as_ptr()) };
+    let len : usize = slice.len() / (size_of::<u16>() / size_of::<u8>());
+
+    unsafe { from_raw_parts(ptr, len)}
+}
 
 
 #[entry]
@@ -65,16 +77,10 @@ fn main() -> ! {
     let mut led_red = gpiog.pg6.into_push_pull_output(&mut gpiog.crl);
     let mut led_green = gpiog.pg7.into_push_pull_output(&mut gpiog.crl);
 
-    //{//TODO: move to macro
-    //    use core::fmt::Write;
-    //    let mut output = jlink_rtt::Output::new();
-    //    let _ = writeln!(&mut output, "Hello {:?}", &TEST_A);
-    //}
     let mut pwr = dp.PWR;
     let mut backup_domain = rcc.bkp.constrain(dp.BKP, &mut rcc.apb1, &mut pwr);
 
     unsafe { RTC = Some(Rtc::rtc(dp.RTC, &mut backup_domain))};
-
     let mut rtc = unsafe { &mut RTC.as_mut().unwrap() };
     rtc.listen_seconds();
     nvic.enable(Interrupt::RTC);
@@ -82,29 +88,42 @@ fn main() -> ! {
     let mut systick = Timer::syst(cp.SYST, 1000.hz(), clocks);
     systick.listen(Event::Update);
 
+    unsafe { TIMER_PAUSE = Some(Timer::tim1(dp.TIM1, 1.hz(), clocks, &mut rcc.apb2)) };
 
-    unsafe {
-        if let None = TIMER_PAUSE {
-            TIMER_PAUSE = Some(Timer::tim1(dp.TIM1, 1.hz(), clocks, &mut rcc.apb2));
-        }
-    }
+    unsafe { adc::ACCEL_ADC = Some(adc::Adc::new())};
+    let adc = unsafe { adc::ACCEL_ADC.as_mut().unwrap() };
+    adc.init();
+    adc.start_conversion();
 
-    unsafe {
-        if let None = adc::ACCEL_ADC {
-            adc::ACCEL_ADC = Some(adc::Adc::new());
-            adc::ACCEL_ADC.as_mut().unwrap().init();
-            adc::ACCEL_ADC.as_mut().unwrap().start_conversion();
-        }
-    }
+    let lcd = unsafe { &mut LCD };
 
+    lcd.init();
+    let rust_emb : &'static[u16] = unsafe { from_u8_slice(RUST_EMB_240X289) };
+    lcd.fill_rect_with_bitmap(Rect{x : 0, y : 0, w : 289, h : 240}, rust_emb);
+    pause(1000.ms());
+    pause(1000.ms());
+    pause(1000.ms());
+    pause(1000.ms());
+    pause(1000.ms());
+    let rust_eva16 : &'static[u16] = unsafe { from_u8_slice(RUST_EVA) };
+    lcd.fill_rect_with_bitmap(FULL_SCREEN_RECT, rust_eva16);
+    pause(1000.ms());
+    pause(1000.ms());
+    pause(1000.ms());
+    pause(1000.ms());
+    pause(1000.ms());
+    lcd.clear();
+    let rust_logo16 : &'static[u16] = unsafe { from_u8_slice(RUST_LOGO) };
+    lcd.fill_rect_with_bitmap(Rect { x : 75, y : 20, w : 200, h : 200}, rust_logo16);
+    pause(1000.ms());
+    pause(1000.ms());
+    pause(1000.ms());
+    pause(1000.ms());
+    pause(1000.ms());
 
     let mut green = unsafe { &mut GREEN };
     let mut red = unsafe { &mut RED };
     let mut blue = unsafe { &mut BLUE };
-
-    let mut lcd = unsafe { &mut LCD };
-
-    lcd.init();
     lcd.fill_rect_with_color(*blue, 0b001111u16);
     lcd.fill_rect_with_color(*green, RGB(30, 220, 50));
     lcd.fill_rect_with_color(*red, Color::Red);

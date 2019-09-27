@@ -19,7 +19,7 @@ use color::*;
 
 pub const LCD_WIDTH : usize = 320;
 pub const LCD_HEIGHT : usize = 240;
-const FULL_SCREEN_RECT : Rect = Rect { x : 0, y : 0, w : LCD_WIDTH, h : LCD_HEIGHT };
+pub const FULL_SCREEN_RECT : Rect = Rect { x : 0, y : 0, w : LCD_WIDTH, h : LCD_HEIGHT };
 
 #[derive(Copy, Clone, Debug)]
 pub struct Rect {
@@ -78,6 +78,13 @@ impl Lcd {
         Self::fill_with_color(rect.w * rect.h, color.into());
     }
 
+    /// Заливка области установленным битмапом
+    pub fn fill_rect_with_bitmap(&mut self, rect : Rect, bitmap : &[u16])  
+    {
+        Self::set_rect(rect);
+        Self::fill_with_bitmap(rect.w * rect.h, bitmap);
+    } 
+ 
     /// Инициализация контроллера дисплея
     fn init_disp_controller() {
         use io::*;
@@ -160,6 +167,14 @@ impl Lcd {
         while ln != 0  {
             AdrParmt::get().write(color);
             ln -= 1;
+        }
+    }
+    /// Залитие области развертки битмапом
+    fn fill_with_bitmap(mut ln : usize, bitmap : &[u16]) {
+        use io::*;
+        AdrIndex::get().write(0x22);
+        for i in 0 .. ln {
+            AdrParmt::get().write(bitmap[i]);
         }
     }
 }
