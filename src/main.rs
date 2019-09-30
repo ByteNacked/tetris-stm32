@@ -1,5 +1,9 @@
 #![no_std]
 #![no_main]
+#![feature(asm)]
+#![feature(generators, generator_trait)]
+#![feature(impl_trait_in_bindings)]
+#![feature(const_fn)]
 
 extern crate jlink_rtt;
 extern crate panic_rtt;
@@ -8,6 +12,7 @@ mod lcd;
 mod port;
 mod pause;
 mod adc;
+mod sche;
 
 use core::panic::PanicInfo;
 use cortex_m::asm;
@@ -41,9 +46,9 @@ static mut TIMER_PAUSE: Option<Timer<pac::TIM1>> = None;
 const RUST_LOGO : &'static[u8] = include_bytes!("../pic/rust-logo-white_t.bmp");
 const RUST_EVA : &'static[u8] = include_bytes!("../pic/rust_eva_logo-t.bmp");
 const RUST_EMB_240X289 : &'static[u8] = include_bytes!("../pic/rust_emb_240x289_t.bmp");
-const RUST_BROWN : &'static[u8] = include_bytes!("../pic/rust_rust_200x200_t.bmp");
+const _RUST_BROWN : &'static[u8] = include_bytes!("../pic/rust_rust_200x200_t.bmp");
 
-unsafe fn from_u8_slice(slice : &[u8]) -> &[u16] {
+fn from_u8_slice(slice : &[u8]) -> &[u16] {
     use core::slice::from_raw_parts;
     use core::mem::{size_of, transmute};
 
@@ -56,6 +61,7 @@ unsafe fn from_u8_slice(slice : &[u8]) -> &[u16] {
 
 #[entry]
 fn main() -> ! {
+
     port_init();
     fsmc_init();
 
@@ -98,14 +104,14 @@ fn main() -> ! {
     let lcd = unsafe { &mut LCD };
 
     lcd.init();
-    let rust_emb : &'static[u16] = unsafe { from_u8_slice(RUST_EMB_240X289) };
+    let rust_emb : &'static[u16] = from_u8_slice(RUST_EMB_240X289);
     lcd.fill_rect_with_bitmap(Rect{x : 0, y : 0, w : 289, h : 240}, rust_emb);
     pause(1000.ms());
     pause(1000.ms());
     pause(1000.ms());
     pause(1000.ms());
     pause(1000.ms());
-    let rust_eva16 : &'static[u16] = unsafe { from_u8_slice(RUST_EVA) };
+    let rust_eva16 : &'static[u16] = from_u8_slice(RUST_EVA);
     lcd.fill_rect_with_bitmap(FULL_SCREEN_RECT, rust_eva16);
     pause(1000.ms());
     pause(1000.ms());
@@ -113,7 +119,7 @@ fn main() -> ! {
     pause(1000.ms());
     pause(1000.ms());
     lcd.clear();
-    let rust_logo16 : &'static[u16] = unsafe { from_u8_slice(RUST_LOGO) };
+    let rust_logo16 : &'static[u16] = from_u8_slice(RUST_LOGO);
     lcd.fill_rect_with_bitmap(Rect { x : 75, y : 20, w : 200, h : 200}, rust_logo16);
     pause(1000.ms());
     pause(1000.ms());

@@ -241,6 +241,6 @@ macro_rules! rtt_print {
     ($($arg:tt)*) => ({
         use core::fmt::Write;
         let mut output = jlink_rtt::Output::new();
-        writeln!(&mut output, $($arg)*)
+        let _ = writeln!(&mut output, $($arg)*);
     });
 }

@@ -170,7 +170,7 @@ impl Lcd {
         }
     }
     /// Залитие области развертки битмапом
-    fn fill_with_bitmap(mut ln : usize, bitmap : &[u16]) {
+    fn fill_with_bitmap(ln : usize, bitmap : &[u16]) {
         use io::*;
         AdrIndex::get().write(0x22);
         for i in 0 .. ln {
