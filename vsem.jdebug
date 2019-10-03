@@ -15,7 +15,7 @@ void OnProjectLoad (void) {
   Project.SetDevice ("STM32F103ZG");
   Project.SetHostIF ("USB", "");
   Project.SetTargetIF ("JTAG");
-  Project.SetTIFSpeed ("4 MHz");
+  Project.SetTIFSpeed ("15 MHz");
   Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M3.svd");
   Project.AddSvdFile ("$(InstallDir)/Config/Peripherals/STM32F103xx.svd");
   Project.AddPathSubstitute ("/home/romanm", "$(ProjectDir)");

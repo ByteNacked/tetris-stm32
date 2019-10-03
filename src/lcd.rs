@@ -29,6 +29,12 @@ pub struct Rect {
     pub h : usize,
 }
 
+impl Rect {
+    pub fn new(x : usize, y : usize, w : usize, h : usize) -> Self {
+        Rect { x, y, w, h }
+    }
+}
+
 pub struct Lcd {}
 
 impl Lcd {

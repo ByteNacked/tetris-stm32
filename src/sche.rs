@@ -1,19 +1,29 @@
-
 use core::ops::{Generator, GeneratorState};
 use core::pin::Pin;
-
 use cortex_m::asm;
 use cortex_m::asm::{delay, wfi, bkpt};
 use cortex_m_rt::{entry, exception};
 use super::rtt_print;
 
+fn func1() -> u32 {
+    1
+}
+
+fn func2() -> u32 {
+    2
+}
+
+fn func3() -> u32{
+    3
+}
+
 const fn up_to(limit: u32) -> impl Generator<Yield = u32, Return = u32> + core::marker::Unpin + core::marker::Sized {
     move || {
-        let mut i = 0;
-        loop {
-            i += 1;
-            yield i;
-        }
+
+        yield func1();
+        yield func2();
+        yield func3();
+
         return limit;
     }
 }
@@ -31,14 +41,23 @@ fn test() {
 static mut MY_GEN : impl Generator<Yield = u32, Return = u32> + core::marker::Unpin = up_to(2);
 
 
+#[allow(dead_code)]
 pub fn schedule() {
 
     rtt_print!("Gen size {}", core::mem::size_of_val(unsafe{&MY_GEN}));
+
+    //let b : SmallBox<dyn Generator<Yield=u32, Return = u32>, S4>= SmallBox::new(
+    //    || {
+    //        yield 0;
+    //        yield 1;
+    //        yield 2;
+    //        return 3;
+    //    }
+    //);
     
     match Pin::new(unsafe {&mut MY_GEN}).resume() {
         GeneratorState::Yielded(num) => { rtt_print!("Step : {}", num); }
         GeneratorState::Complete(_) => { rtt_print!("Finish step!"); }
-        _ => panic!("unexpected value from resume"),
     }
 }
 
@@ -67,3 +86,6 @@ fn SVCall() {
 fn PendSV() {
     test();
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+

@@ -1,9 +1,14 @@
 #![no_std]
 #![no_main]
+
 #![feature(asm)]
 #![feature(generators, generator_trait)]
 #![feature(impl_trait_in_bindings)]
 #![feature(const_fn)]
+#![feature(never_type)]
+
+#![allow(unused_imports)]
+#![allow(incomplete_features)]
 
 extern crate jlink_rtt;
 extern crate panic_rtt;
@@ -13,6 +18,9 @@ mod port;
 mod pause;
 mod adc;
 mod sche;
+mod beeper;
+mod embbox;
+mod splash;
 
 use core::panic::PanicInfo;
 use cortex_m::asm;
@@ -33,6 +41,7 @@ use port::*;
 use pause::pause;
 use lcd::{Lcd, LCD_WIDTH, LCD_HEIGHT, FULL_SCREEN_RECT, Rect, color::*};
 use jlink_rtt::rtt_print;
+use embbox::EmbBox;
 
 //#[panic_handler]
 //#[inline(never)]
@@ -42,25 +51,42 @@ use jlink_rtt::rtt_print;
 //    loop {}
 //}
 
-static mut TIMER_PAUSE: Option<Timer<pac::TIM1>> = None;
-const RUST_LOGO : &'static[u8] = include_bytes!("../pic/rust-logo-white_t.bmp");
-const RUST_EVA : &'static[u8] = include_bytes!("../pic/rust_eva_logo-t.bmp");
-const RUST_EMB_240X289 : &'static[u8] = include_bytes!("../pic/rust_emb_240x289_t.bmp");
-const _RUST_BROWN : &'static[u8] = include_bytes!("../pic/rust_rust_200x200_t.bmp");
 
-fn from_u8_slice(slice : &[u8]) -> &[u16] {
-    use core::slice::from_raw_parts;
-    use core::mem::{size_of, transmute};
+use core::ops::{Generator, GeneratorState};
+use core::pin::Pin;
 
-    let ptr : * const u16 = unsafe { transmute(slice.as_ptr()) };
-    let len : usize = slice.len() / (size_of::<u16>() / size_of::<u8>());
-
-    unsafe { from_raw_parts(ptr, len)}
+struct Valve {
+    pub reg : u32,
 }
-
 
 #[entry]
 fn main() -> ! {
+    rtt_print!("Test 1");
+
+    let mut v = Valve { reg : 0, };
+
+    let mut sb : EmbBox< dyn Generator<Yield = u32, Return = !> + core::marker::Unpin, [usize; 8]> = embbox!{
+        || {
+            
+            loop {
+                yield 0u32;
+                v.reg = 2;
+                yield 1;
+                v.reg = 3;
+                yield 2;
+            }
+        }
+    };
+
+    rtt_print!("Test 2");
+    for _ in 0 .. 3 {
+        match Pin::new(&mut *sb).resume() {
+            GeneratorState::Yielded(num) => { rtt_print!("Step : {}", num); }
+            GeneratorState::Complete(_) => { rtt_print!("Finish step!"); }
+        }
+    }
+
+    rtt_print!("Test 3");
 
     port_init();
     fsmc_init();
@@ -87,7 +113,7 @@ fn main() -> ! {
     let mut backup_domain = rcc.bkp.constrain(dp.BKP, &mut rcc.apb1, &mut pwr);
 
     unsafe { RTC = Some(Rtc::rtc(dp.RTC, &mut backup_domain))};
-    let mut rtc = unsafe { &mut RTC.as_mut().unwrap() };
+    let rtc = unsafe { &mut RTC.as_mut().unwrap() };
     rtc.listen_seconds();
     nvic.enable(Interrupt::RTC);
 
@@ -104,40 +130,22 @@ fn main() -> ! {
     let lcd = unsafe { &mut LCD };
 
     lcd.init();
-    let rust_emb : &'static[u16] = from_u8_slice(RUST_EMB_240X289);
-    lcd.fill_rect_with_bitmap(Rect{x : 0, y : 0, w : 289, h : 240}, rust_emb);
-    pause(1000.ms());
-    pause(1000.ms());
-    pause(1000.ms());
-    pause(1000.ms());
-    pause(1000.ms());
-    let rust_eva16 : &'static[u16] = from_u8_slice(RUST_EVA);
-    lcd.fill_rect_with_bitmap(FULL_SCREEN_RECT, rust_eva16);
-    pause(1000.ms());
-    pause(1000.ms());
-    pause(1000.ms());
-    pause(1000.ms());
-    pause(1000.ms());
-    lcd.clear();
-    let rust_logo16 : &'static[u16] = from_u8_slice(RUST_LOGO);
-    lcd.fill_rect_with_bitmap(Rect { x : 75, y : 20, w : 200, h : 200}, rust_logo16);
-    pause(1000.ms());
-    pause(1000.ms());
-    pause(1000.ms());
-    pause(1000.ms());
-    pause(1000.ms());
 
-    let mut green = unsafe { &mut GREEN };
-    let mut red = unsafe { &mut RED };
-    let mut blue = unsafe { &mut BLUE };
-    lcd.fill_rect_with_color(*blue, 0b001111u16);
-    lcd.fill_rect_with_color(*green, RGB(30, 220, 50));
-    lcd.fill_rect_with_color(*red, Color::Red);
+    splash::draw_sreens(lcd);
 
-    unsafe { TIM2 = Some(Timer::tim2(dp.TIM2, 15.hz(), clocks, &mut rcc.apb1)) };
-    let mut tim2 = unsafe { TIM2.as_mut().unwrap() };
+    //let green = unsafe { &mut GREEN };
+    //let red = unsafe { &mut RED };
+    //let blue = unsafe { &mut BLUE };
+    //lcd.fill_rect_with_color(*blue, 0b001111u16);
+    //lcd.fill_rect_with_color(*green, RGB(30, 220, 50));
+    //lcd.fill_rect_with_color(*red, Color::Red);
+
+    unsafe { TIM2 = Some(Timer::tim2(dp.TIM2, 15.ms(), clocks, &mut rcc.apb1)) };
+    let tim2 = unsafe { TIM2.as_mut().unwrap() };
     tim2.listen(Event::Update);
     unsafe { nvic.set_priority(Interrupt::TIM2, 3 << 4) };
+
+    create_tetris();
     nvic.enable(Interrupt::TIM2);
 
     loop {
@@ -147,7 +155,6 @@ fn main() -> ! {
         pause(500.ms());
         let _ = led_green.set_low();
         let _ = led_red.set_high();
-        //pause(30.ms());
     }
 }
 
@@ -157,13 +164,15 @@ static mut RED : Rect = Rect{x : 50, y : 50, w : 25, h : 25};
 static mut LCD : Lcd = Lcd::new();
 static mut RTC : Option<Rtc> = None;
 static mut TIM2 : Option<Timer<pac::TIM2>> = None;
+static mut TIMER_PAUSE: Option<Timer<pac::TIM1>> = None;
 
-fn game_iter(tick : u32) {
-    let mut green = unsafe { &mut GREEN };
-    let mut red = unsafe { &mut RED };
-    let mut blue = unsafe { &mut BLUE };
+#[allow(dead_code)]
+fn game_iter(_tick : u32) {
+    let green = unsafe { &mut GREEN };
+    let red = unsafe { &mut RED };
+    let _blue = unsafe { &mut BLUE };
 
-    let mut lcd = unsafe { &mut LCD };
+    let lcd = unsafe { &mut LCD };
 
     let prev_red = *red;
     let prev_green = *green;
@@ -202,6 +211,71 @@ fn game_iter(tick : u32) {
     //}
 }
 
+use tetris_nostd as tetris;
+use tetris::*;
+
+const SQUARE_SIZE: usize = 20;
+static mut TETRIS : Option<Game> = None;
+
+fn create_tetris() {
+    let seed: u64 = 1;
+    unsafe { TETRIS = Some(Game::new(seed)) };
+}
+
+fn tetris_control() -> Control {
+    let mut c = Control::default();
+
+    unsafe { adc::ACCEL_ADC.as_mut().unwrap().start_conversion() };
+    let (_, y, x) = unsafe { adc::ACCEL_ADC.as_mut().unwrap().get_axes() };
+    let dy = if y < 50 && y > -50 { 0 } else { y };
+    let dx = if x < 150 && x > -150 { 0 } else { x };
+
+    if dy > 0 { c.right = true; }
+    if dy < 0 { c.left = true; }
+
+    if dx < 0 { c.fall = true; }
+
+    c
+}
+
+fn tetris_iter(_tick : u32) {
+
+    let lcd = unsafe { &mut LCD };
+    let game = unsafe { TETRIS.as_mut().unwrap() };
+
+    let c = tetris_control();
+    game.control(&c);
+    game.update();
+
+    for y in 0..BOARD_H {
+        for x in 0..BOARD_W {
+            let unit = game.get_draw_cell(x, y);
+            if unit.dirty
+            {
+                let color = match unit.state {
+                    tetris::CType::Empty  => RGB(0, 0, 0),
+                    tetris::CType::Red    => RGB(255, 0, 0),
+                    tetris::CType::Blue   => RGB(0, 70, 180),
+                    tetris::CType::C1     => RGB(30, 220, 50),
+                    tetris::CType::C2     => RGB(255, 210, 0),
+                    tetris::CType::C3     => RGB(210, 210, 20),
+                    tetris::CType::C4     => RGB(0, 10, 210),
+                    _ => panic!("unsupported color"),
+                };
+
+                let x_calc = x * SQUARE_SIZE as usize;
+                let y_calc = y * SQUARE_SIZE as usize;
+                let _ = lcd.fill_rect_with_color(Rect::new(
+                    LCD_WIDTH - SQUARE_SIZE - y_calc,
+                    x_calc,
+                    SQUARE_SIZE as usize,
+                    SQUARE_SIZE as usize,
+                ), color);
+                unit.dirty = false;
+            }
+        }
+    }
+}
 
 static mut DBG_TICK : u32 = 0;
 //INTERRUPTS
@@ -209,16 +283,16 @@ static mut DBG_TICK : u32 = 0;
 fn TIM2() {
     unsafe { TIM2.as_mut().unwrap().clear_update_interrupt_flag() };
 
-    game_iter(unsafe { DBG_TICK });
+    tetris_iter(unsafe { DBG_TICK });
     unsafe { DBG_TICK += 1; }
 }
 
 #[interrupt]
 fn RTC() {
-    let mut rtc = unsafe { &mut RTC.as_mut().unwrap() };
+    let rtc = unsafe { &mut RTC.as_mut().unwrap() };
     rtc.clear_second_flag();
 
-    let res = unsafe { DBG_TICK };
+    let _res = unsafe { DBG_TICK };
     unsafe { DBG_TICK = 0; }
 
     //let _ = rtt_print!("TIM2 hz: {}", res);
