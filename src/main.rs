@@ -222,28 +222,72 @@ fn create_tetris() {
     unsafe { TETRIS = Some(Game::new(seed)) };
 }
 
-fn tetris_control() -> Control {
+fn tetris_control(tick : u32) -> Control {
+
+    static mut ACCUM_Y : i32 = 0;
+    static mut ACCUM_X : i32 = 0;
+    static mut LVL_RET : bool = true;
     let mut c = Control::default();
+    let accum_y = unsafe { &mut ACCUM_Y };
+    let accum_x = unsafe { &mut ACCUM_X };
 
     unsafe { adc::ACCEL_ADC.as_mut().unwrap().start_conversion() };
     let (_, y, x) = unsafe { adc::ACCEL_ADC.as_mut().unwrap().get_axes() };
-    let dy = if y < 50 && y > -50 { 0 } else { y };
-    let dx = if x < 150 && x > -150 { 0 } else { x };
 
-    if dy > 0 { c.right = true; }
-    if dy < 0 { c.left = true; }
+    if x > -100 {
+        unsafe { LVL_RET = true; }
+    }
 
-    if dx < 0 { c.fall = true; }
+    let dx = if x.abs() < 250 { 0 } else { x };
+    let dy = if y.abs() < 40 { 0 } else { y };
+
+    if tick % 30 == 0 {
+        rtt_print!("dy : {}, dx : {}", dy, dx);
+    }
+
+    {
+        if dy.abs() > 150 {
+            *accum_y += dy as i32 * 6;
+        }
+        else {
+            *accum_y += dy as i32;
+        }
+
+        const l1 : i32 = 1300;
+        if *accum_y > l1 {
+            c.right = true;
+            *accum_y -= l1;
+        }
+        else if *accum_y < -l1 {
+            c.left = true;
+            *accum_y += l1;
+        }
+    }
+    {
+        //accum_x.saturating_add(dx as i32);
+        //if unsafe {LVL_RET} && accum_x.abs() > 15000 {
+        //    c.fall = true;
+        //    *accum_x = 0;
+        //    unsafe { LVL_RET = false;}
+        //}
+
+        if unsafe{LVL_RET} && dx < -350 {
+            c.fall = true;
+            unsafe { LVL_RET = false;}
+        }
+    }
+
+
 
     c
 }
 
-fn tetris_iter(_tick : u32) {
+fn tetris_iter(tick : u32) {
 
     let lcd = unsafe { &mut LCD };
     let game = unsafe { TETRIS.as_mut().unwrap() };
 
-    let c = tetris_control();
+    let c = tetris_control(tick);
     game.control(&c);
     game.update();
 
