@@ -24,7 +24,7 @@ pub fn port_init() {
          .iopden().enabled()
          .iopeen().enabled()
          .iopfen().enabled()
-         //.iopgen().enabled()
+         .iopgen().enabled()
     });
 
     {  //GPIO A
@@ -194,6 +194,67 @@ pub fn port_init() {
     }
 
 
+    {  //GPIO G
+
+        let gpiog = unsafe { &*GPIOG::ptr() };
+        gpiog.odr.modify(|_, w| {
+            w.odr0().high()
+             .odr1().high()
+             .odr2().high()
+             .odr3().high()
+             .odr4().high()
+             .odr5().high()
+             .odr6().low()
+             .odr7().high()
+             .odr8().high()
+             .odr9().high()
+             .odr10().high()
+             .odr11().high()
+             .odr12().high()
+             .odr13().low()
+             .odr14().high()
+             .odr15().high()
+        });
+
+        gpiog.crl.modify(|_, w| {
+            w.mode0().output2()
+             .cnf0().open_drain()
+             .mode1().output2()
+             .cnf1().open_drain()
+             .mode2().input()
+             .cnf2().bits(INPUT_FLOAT)
+             .mode3().input()
+             .cnf3().bits(INPUT_PULL_UP_DOWN)
+             .mode4().output2()
+             .cnf4().open_drain()
+             .mode5().output2()
+             .cnf5().open_drain()
+             .mode6().output2()
+             .cnf6().open_drain()
+             .mode7().output2()
+             .cnf7().open_drain()
+        });
+
+        gpiog.crh.modify(|_, w| {
+            w.mode8().input()
+             .cnf8().bits(INPUT_PULL_UP_DOWN)
+             .mode9().input()
+             .cnf9().bits(INPUT_PULL_UP_DOWN)
+             .mode10().output2()
+             .cnf10().push_pull()
+             .mode11().input()
+             .cnf11().bits(INPUT_FLOAT)
+             .mode12().input()
+             .cnf12().bits(INPUT_FLOAT)
+             .mode13().input()
+             .cnf13().bits(INPUT_FLOAT)
+             .mode14().input()
+             .cnf14().bits(INPUT_FLOAT)
+             .mode15().output2()
+             .cnf15().open_drain()
+        });
+
+    }
 
    //TODO: registers 
 }

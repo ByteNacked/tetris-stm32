@@ -21,6 +21,8 @@ mod sche;
 mod beeper;
 mod embbox;
 mod splash;
+mod debug;
+mod button;
 
 use core::panic::PanicInfo;
 use cortex_m::asm;
@@ -88,9 +90,6 @@ fn main() -> ! {
 
     rtt_print!("Test 3");
 
-    port_init();
-    fsmc_init();
-
     let cp = cortex_m::Peripherals::take().unwrap();
     let dp = pac::Peripherals::take().unwrap();
 
@@ -106,6 +105,9 @@ fn main() -> ! {
 
     let mut gpiog = dp.GPIOG.split(&mut rcc.apb2);
 
+    port_init();
+    fsmc_init();
+
     let mut led_red = gpiog.pg6.into_push_pull_output(&mut gpiog.crl);
     let mut led_green = gpiog.pg7.into_push_pull_output(&mut gpiog.crl);
 
@@ -117,7 +119,7 @@ fn main() -> ! {
     rtc.listen_seconds();
     nvic.enable(Interrupt::RTC);
 
-    let mut systick = Timer::syst(cp.SYST, 1000.hz(), clocks);
+    let mut systick = Timer::syst(cp.SYST, 100.hz(), clocks);
     systick.listen(Event::Update);
 
     unsafe { TIMER_PAUSE = Some(Timer::tim1(dp.TIM1, 1.hz(), clocks, &mut rcc.apb2)) };
@@ -165,6 +167,7 @@ static mut LCD : Lcd = Lcd::new();
 static mut RTC : Option<Rtc> = None;
 static mut TIM2 : Option<Timer<pac::TIM2>> = None;
 static mut TIMER_PAUSE: Option<Timer<pac::TIM1>> = None;
+static mut MAGIC_NUM : Option<u32> = None;
 
 #[allow(dead_code)]
 fn game_iter(_tick : u32) {
@@ -231,6 +234,9 @@ fn tetris_control(tick : u32) -> Control {
     let accum_y = unsafe { &mut ACCUM_Y };
     let accum_x = unsafe { &mut ACCUM_X };
 
+// panic test
+//    let _ = unsafe { MAGIC_NUM.expect(dbg_info!()) };
+
     unsafe { adc::ACCEL_ADC.as_mut().unwrap().start_conversion() };
     let (_, y, x) = unsafe { adc::ACCEL_ADC.as_mut().unwrap().get_axes() };
 
@@ -242,7 +248,7 @@ fn tetris_control(tick : u32) -> Control {
     let dy = if y.abs() < 40 { 0 } else { y };
 
     if tick % 30 == 0 {
-        rtt_print!("dy : {}, dx : {}", dy, dx);
+        //rtt_print!("dy : {}, dx : {}", dy, dx);
     }
 
     {
@@ -253,14 +259,14 @@ fn tetris_control(tick : u32) -> Control {
             *accum_y += dy as i32;
         }
 
-        const l1 : i32 = 1300;
-        if *accum_y > l1 {
+        const L1 : i32 = 1300;
+        if *accum_y > L1 {
             c.right = true;
-            *accum_y -= l1;
+            *accum_y -= L1;
         }
-        else if *accum_y < -l1 {
+        else if *accum_y < -L1 {
             c.left = true;
-            *accum_y += l1;
+            *accum_y += L1;
         }
     }
     {
@@ -346,4 +352,9 @@ fn RTC() {
 fn SysTick() {
     static mut DBG_SYSTICK : u32 = 0;
     *DBG_SYSTICK += 1;
+
+    unsafe {
+        button::BUTTON_LEFT.update_state_100hz();
+        button::BUTTON_RIGHT.update_state_100hz();
+    }
 }
