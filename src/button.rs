@@ -16,7 +16,7 @@ pub struct Left {}
 impl ButtonPin for Left {
     fn state(&self) -> State {
         let gpiog = unsafe { &*GPIOG::ptr() };
-        gpiog.odr.read().odr8().bit().into()
+        gpiog.idr.read().idr8().bit().into()
     }
 }
 
@@ -24,7 +24,7 @@ pub struct Right {}
 impl ButtonPin for Right {
     fn state(&self) -> State {
         let gpiog = unsafe { &*GPIOG::ptr() };
-        gpiog.odr.read().odr9().bit().into()
+        gpiog.idr.read().idr9().bit().into()
     }
 }
 
@@ -85,8 +85,8 @@ impl<P : ButtonPin> Button<P> {
                     self.prev = pin_state;
                     /*определение длины нажатия или его остутствия (джиттер)*/
                     match self.press_len {
-                        0 ..= 7   => self.press_len = 0,
-                        8 ..= 127 => {
+                        0 ..= 5   => (),
+                        6 ..= 255 => {
                             self.p = Press::Short;
                             rtt_print!("Button press: {:?} in ticks {}", self.p, self.press_len);
                         }
@@ -95,6 +95,7 @@ impl<P : ButtonPin> Button<P> {
                             rtt_print!("Button press: {:?} in ticks {}", self.p, self.press_len);
                         }
                     }
+                    self.press_len = 0;
                 }
             }
             State::Released => {

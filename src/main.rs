@@ -26,6 +26,7 @@ mod button;
 
 use core::panic::PanicInfo;
 use cortex_m::asm;
+use cortex_m::interrupt::{enable as int_enable, disable as int_disable};
 use cortex_m::asm::{delay, wfi, bkpt};
 use cortex_m_rt::{entry, exception};
 use nb::block;
@@ -38,6 +39,7 @@ use stm32f1xx_hal::{
     stm32::interrupt,
     stm32::Interrupt,
     rtc::Rtc,
+    time,
 };
 use port::*;
 use pause::pause;
@@ -103,6 +105,8 @@ fn main() -> ! {
         .cfgr
         .freeze_72Mhz_nousb(&mut flash.acr);
 
+    unsafe { MONO_TIMER = Some(time::MonoTimer::new(cp.DWT, clocks)) };
+
     let mut gpiog = dp.GPIOG.split(&mut rcc.apb2);
 
     port_init();
@@ -151,12 +155,24 @@ fn main() -> ! {
     nvic.enable(Interrupt::TIM2);
 
     loop {
+        let now = unsafe { MONO_TIMER.as_ref().unwrap().now() };       
+
+        //unsafe { int_enable() };
+
         pause(500.ms());
         let _ = led_green.set_high();
         let _ = led_red.set_low();
         pause(500.ms());
         let _ = led_green.set_low();
         let _ = led_red.set_high();
+
+        //unsafe { int_disable() };
+
+        let msr_tick = now.elapsed() as f32;
+        let frq = unsafe { MONO_TIMER.as_ref().unwrap().frequency().0 } as f32;
+        let sec = 1000f32 / frq * msr_tick;
+        rtt_print!("PERF: tick : {}, sec : {}", msr_tick, sec);
+
     }
 }
 
@@ -168,6 +184,7 @@ static mut RTC : Option<Rtc> = None;
 static mut TIM2 : Option<Timer<pac::TIM2>> = None;
 static mut TIMER_PAUSE: Option<Timer<pac::TIM1>> = None;
 static mut MAGIC_NUM : Option<u32> = None;
+static mut MONO_TIMER : Option<time::MonoTimer> = None;
 
 #[allow(dead_code)]
 fn game_iter(_tick : u32) {
@@ -289,6 +306,8 @@ fn tetris_control(tick : u32) -> Control {
 }
 
 fn tetris_iter(tick : u32) {
+    
+    let now = unsafe { MONO_TIMER.as_ref().unwrap().now() };
 
     let lcd = unsafe { &mut LCD };
     let game = unsafe { TETRIS.as_mut().unwrap() };
@@ -324,6 +343,13 @@ fn tetris_iter(tick : u32) {
                 unit.dirty = false;
             }
         }
+    }
+
+    if tick % 60 == 0 {
+        let msr_tick = now.elapsed() as f32;
+        let frq = unsafe { MONO_TIMER.as_ref().unwrap().frequency().0 } as f32;
+        let sec = 1000f32 / frq * msr_tick;
+        rtt_print!("PERF: tick : {}, sec : {}", msr_tick, sec);
     }
 }
 
