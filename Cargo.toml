@@ -13,6 +13,9 @@ embedded-hal = "0.2.3"
 jlink_rtt = "0.1.0"
 panic_rtt = "0.2.0"
 volatile-register = "0.2.0"
+phf = { version = "0.7.24", default-features = false, features = ["macros"]}
+usb-device = "0.2.3"
+stm32-usbd = { version = "0.4", features = ["stm32f103xx"] }
 
 [dependencies.tetris_nostd]
 path = "../tetris_nostd"
@@ -24,6 +27,7 @@ features = ["stm32f103", "rt"]
 [patch.crates-io]
 stm32f1xx-hal = { path = "stm32f1xx-hal" }
 jlink_rtt = { path = "jlink_rtt-0.1.0" }
+phf = { path = "rust-phf/phf"}
 
 [[bin]]
 name = "tetris-micro"
@@ -34,5 +38,5 @@ bench = false
 codegen-units = 1 # better optimizations
 debug = true # symbols are nice and they don't increase the size on Flash
 lto = true # better optimizations
-opt-level = "z"
-#opt-level = 3
+#opt-level = "z"
+opt-level = 3

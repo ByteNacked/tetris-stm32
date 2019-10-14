@@ -174,7 +174,7 @@ impl CFGR {
         self
     }
 
-    pub fn freeze_72Mhz_nousb(self, acr: &mut ACR) -> Clocks {
+    pub fn freeze_72Mhz_usb(self, acr: &mut ACR) -> Clocks {
 
         //72 Mhz setup, w/o usb
         let hclk: u32 = 72_000_000;
@@ -187,7 +187,7 @@ impl CFGR {
         let ppre2_bits: u8 = 0b100;
         let sysclk: u32 = 72_000_000;
         let adcclk: u32 = 0;
-        let usbclk_valid: bool = false;
+        let usbclk_valid: bool = true;
 
         let rcc = unsafe { &*RCC::ptr() };
 
@@ -226,6 +226,9 @@ impl CFGR {
             })
         }
 
+        // usbpre == false: divide clock by 1.5, otherwise no division
+        let usbpre = false;
+
         // set prescalers and clock source
         #[cfg(feature = "stm32f103")]
         rcc.cfgr.modify(|_, w| unsafe {
@@ -236,8 +239,8 @@ impl CFGR {
                 .bits(ppre1_bits)
                 .hpre()
                 .bits(hpre_bits)
-                //.usbpre()
-                //.bit(usbpre)
+                .usbpre()
+                .bit(usbpre)
                 .sw()
                 .bits(
                     // PLL

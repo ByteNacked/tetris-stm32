@@ -9,6 +9,7 @@
 
 #![allow(unused_imports)]
 #![allow(incomplete_features)]
+#![allow(dead_code)]
 
 extern crate jlink_rtt;
 extern crate panic_rtt;
@@ -23,6 +24,8 @@ mod embbox;
 mod splash;
 mod debug;
 mod button;
+mod cmd;
+mod usb;
 
 use core::panic::PanicInfo;
 use cortex_m::asm;
@@ -44,7 +47,7 @@ use stm32f1xx_hal::{
 use port::*;
 use pause::pause;
 use lcd::{Lcd, LCD_WIDTH, LCD_HEIGHT, FULL_SCREEN_RECT, Rect, color::*};
-use jlink_rtt::rtt_print;
+pub(crate) use jlink_rtt::rtt_print;
 use embbox::EmbBox;
 
 //#[panic_handler]
@@ -103,11 +106,34 @@ fn main() -> ! {
 
     let clocks = rcc
         .cfgr
-        .freeze_72Mhz_nousb(&mut flash.acr);
+        .freeze_72Mhz_usb(&mut flash.acr);
 
     unsafe { MONO_TIMER = Some(time::MonoTimer::new(cp.DWT, clocks)) };
 
-    let mut gpiog = dp.GPIOG.split(&mut rcc.apb2);
+    {
+        let now = unsafe { MONO_TIMER.as_ref().unwrap().now() };       
+        cmd::str_to_enum("hard");
+        let msr_tick = now.elapsed() as f32;
+        let frq = unsafe { MONO_TIMER.as_ref().unwrap().frequency().0 } as f32;
+        let sec = 1000f32 / frq * msr_tick;
+        rtt_print!("PERF: tick : {}, sec : {}", msr_tick, sec);
+
+        let now = unsafe { MONO_TIMER.as_ref().unwrap().now() };       
+        cmd::str_to_enum("super/long/name/tarta/tatat/tatata");
+        let msr_tick = now.elapsed() as f32;
+        let frq = unsafe { MONO_TIMER.as_ref().unwrap().frequency().0 } as f32;
+        let sec = 1000f32 / frq * msr_tick;
+        rtt_print!("PERF: tick : {}, sec : {}", msr_tick, sec);
+
+        let now = unsafe { MONO_TIMER.as_ref().unwrap().now() };       
+        cmd::str_to_enum("hard/name");
+        let msr_tick = now.elapsed() as f32;
+        let frq = unsafe { MONO_TIMER.as_ref().unwrap().frequency().0 } as f32;
+        let sec = 1000f32 / frq * msr_tick;
+        rtt_print!("PERF: tick : {}, sec : {}", msr_tick, sec);
+    }
+
+    let mut gpiog = unsafe { dp.GPIOG.steal() };
 
     port_init();
     fsmc_init();
@@ -153,6 +179,7 @@ fn main() -> ! {
 
     create_tetris();
     nvic.enable(Interrupt::TIM2);
+    usb::usb_init(&clocks);
 
     loop {
         let now = unsafe { MONO_TIMER.as_ref().unwrap().now() };       

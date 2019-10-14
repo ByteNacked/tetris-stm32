@@ -25,6 +25,8 @@ pub trait GpioExt {
 
     /// Splits the GPIO block into independent pins and registers
     fn split(self, apb2: &mut APB2) -> Self::Parts;
+    unsafe fn steal(self) -> Self::Parts;
+
 }
 
 /// Marker trait for active states.
@@ -117,6 +119,16 @@ macro_rules! gpio {
                     apb2.rstr().modify(|_, w| w.$iopxrst().set_bit());
                     apb2.rstr().modify(|_, w| w.$iopxrst().clear_bit());
 
+                    Parts {
+                        crl: CRL { _0: () },
+                        crh: CRH { _0: () },
+                        $(
+                            $pxi: $PXi { _mode: PhantomData },
+                        )+
+                    }
+                }
+
+                unsafe fn steal(self) -> Parts {
                     Parts {
                         crl: CRL { _0: () },
                         crh: CRH { _0: () },
