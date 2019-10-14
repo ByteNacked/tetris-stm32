@@ -195,10 +195,11 @@ fn main() -> ! {
 
         //unsafe { int_disable() };
 
-        let msr_tick = now.elapsed() as f32;
-        let frq = unsafe { MONO_TIMER.as_ref().unwrap().frequency().0 } as f32;
-        let sec = 1000f32 / frq * msr_tick;
-        rtt_print!("PERF: tick : {}, sec : {}", msr_tick, sec);
+        //PERF
+        //let msr_tick = now.elapsed() as f32;
+        //let frq = unsafe { MONO_TIMER.as_ref().unwrap().frequency().0 } as f32;
+        //let sec = 1000f32 / frq * msr_tick;
+        //rtt_print!("PERF: tick : {}, sec : {}", msr_tick, sec);
 
     }
 }
@@ -371,13 +372,13 @@ fn tetris_iter(tick : u32) {
             }
         }
     }
-
-    if tick % 60 == 0 {
-        let msr_tick = now.elapsed() as f32;
-        let frq = unsafe { MONO_TIMER.as_ref().unwrap().frequency().0 } as f32;
-        let sec = 1000f32 / frq * msr_tick;
-        rtt_print!("PERF: tick : {}, sec : {}", msr_tick, sec);
-    }
+    //PERF
+    //if tick % 60 == 0 {
+    //    let msr_tick = now.elapsed() as f32;
+    //    let frq = unsafe { MONO_TIMER.as_ref().unwrap().frequency().0 } as f32;
+    //    let sec = 1000f32 / frq * msr_tick;
+    //    rtt_print!("PERF: tick : {}, sec : {}", msr_tick, sec);
+    //}
 }
 
 static mut DBG_TICK : u32 = 0;

@@ -90,11 +90,12 @@ fn usb_interrupt() {
         return;
     }
 
-    let mut buf = [0u8; 8];
+    let mut buf = [0u8; 0x40];
 
     match serial.read(&mut buf) {
         Ok(count) if count > 0 => {
-            // Echo back 
+            use super::cmd::parse_n_answer;
+            let count = parse_n_answer(&mut buf);
             serial.write(&buf[0..count]).ok();
         }
         _ => {}
