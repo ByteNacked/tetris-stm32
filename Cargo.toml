@@ -26,10 +26,14 @@ path = "../tetris_nostd"
 version = "0.4.0"
 features = ["stm32f103", "rt"]
 
+[build-dependencies]
+cmd_dsl = "0.1"
+
 [patch.crates-io]
 stm32f1xx-hal = { path = "stm32f1xx-hal" }
 jlink_rtt = { path = "jlink_rtt-0.1.0" }
 phf = { path = "rust-phf/phf"}
+cmd_dsl = { path = "../cmd_dsl" }
 
 [[bin]]
 name = "tetris-micro"
@@ -37,7 +41,10 @@ test = false
 bench = false
 
 [profile.dev.overrides."*"] 
-opt-level = "z"
+opt-level = 3
+
+[profile.dev]
+opt-level = 1
 
 [profile.release]
 codegen-units = 1 # better optimizations

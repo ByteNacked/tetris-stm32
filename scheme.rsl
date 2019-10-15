@@ -1,0 +1,5 @@
+Test {
+    echo : u32,
+    num : u32,
+    reg : u32,
+}

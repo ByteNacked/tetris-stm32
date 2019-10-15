@@ -2,8 +2,6 @@
 use phf::phf_map;
 use super::rtt_print;
 
-
-
 pub fn parse_n_answer(buf : &mut[u8; 0x40]) -> usize {
     #[repr(packed)]
     #[repr(C)]
@@ -34,6 +32,29 @@ pub fn parse_n_answer(buf : &mut[u8; 0x40]) -> usize {
     (4 + cmd.name_sz + cmd.value_sz) as usize
 }
 
+pub fn dispatch_blocking(op : Operation, name : &str) -> CmdResult {
+
+    let e_num = STR_TO_ENUM.get(name).ok_or(Error::NoSuch)?;
+    let e = &REGISTRY[*e_num as usize];
+
+    match (op, e) {
+        (Operation::Erase, Entity::Section) => {
+            rtt_print!("Erasing section {}", name);
+            Err(Error::Ok)
+        }
+        (Operation::Read, Entity::Register(_r)) => {
+            rtt_print!("Reading reg {}", name);
+            Ok(RegType::u32V(42))
+        }
+        (Operation::Write, Entity::Register(_r)) => {
+            rtt_print!("Writing reg {}", name);
+            Err(Error::Ok)
+        }
+        (_, _) => return Err(Error::WrongOperation),
+    }
+}
+
+/// Types definition
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
@@ -50,70 +71,6 @@ pub enum RegType {
     u8V(u8),
 }
 
-pub type CmdResult = Result<RegType, Error>;
-
-pub fn dispatch_blocking(op : Operation, name : &str) -> CmdResult {
-
-    let e_num = STR_TO_ENUM.get(name).ok_or(Error::NoSuch)?;
-    let e = &REGISTRY[*e_num as usize];
-
-    match (op, e) {
-        (Operation::Erase, RegistryEntityType::Section) => {
-            rtt_print!("Erasing section {}", name);
-            Err(Error::Ok)
-        }
-        (Operation::Read, RegistryEntityType::Register(_r)) => {
-            rtt_print!("Reading reg {}", name);
-            Ok(RegType::u32V(42))
-        }
-        (Operation::Write, RegistryEntityType::Register(_r)) => {
-            rtt_print!("Writing reg {}", name);
-            Err(Error::Ok)
-        }
-        (_, _) => return Err(Error::WrongOperation),
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
-enum RegistryEntityType {
-    Section,
-    Register(Register),
-}
-
-#[derive(Clone, Copy, Debug)]
-struct Register {
-    dummy : u32,
-}
-
-const REGISTRY : [RegistryEntityType; RegistryEntityNum::Max as usize] = [
-    RegistryEntityType::Section,
-    RegistryEntityType::Register(Register { dummy : 0 }),
-    RegistryEntityType::Register(Register { dummy : 1 }),
-    RegistryEntityType::Register(Register { dummy : 2 }),
-];
-
-#[allow(non_camel_case_types)]
-#[derive(Clone, Copy, Debug)]
-enum RegistryEntityNum {
-    test,
-    test_echo,
-    test_reg,
-    test_num,
-    Max,
-}
-
-const STR_TO_ENUM : phf::Map<&'static str, RegistryEntityNum> = phf_map! {
-    "test"      => RegistryEntityNum::test,
-    "test/echo" => RegistryEntityNum::test_echo,
-    "test/reg"  => RegistryEntityNum::test_reg,
-    "test/num"  => RegistryEntityNum::test_num,
-};
-
-pub fn str_to_enum(s : &'static str) {
-    let c = STR_TO_ENUM.get(s);
-    rtt_print!("{:?}",  &c);
-}
-
 pub enum Error {
     Ok = 0,
     WrongOperation,
@@ -123,3 +80,43 @@ pub enum Error {
     Locked,
     EraseNeeded,
 }
+
+pub type CmdResult = Result<RegType, Error>;
+
+#[derive(Clone, Copy, Debug)]
+enum Entity {
+    Section,
+    Register(Register),
+}
+
+#[derive(Clone, Copy, Debug)]
+struct Register {
+    dummy : u32,
+}
+
+pub fn str_to_enum(s : &'static str) {
+    let c = STR_TO_ENUM.get(s);
+    rtt_print!("{:?}",  &c);
+}
+
+// CODE GEN PART
+/*
+const REGISTRY : [Entity; EntityNum::Max as usize] = [
+    CODE GEN HERE
+];
+*/
+
+/*
+enum EntityNum {
+    CODE GEN HERE
+    Max,
+}
+*/
+
+/*
+const STR_TO_ENUM : phf::Map<&'static str, EntityNum> = phf_map! {
+    CODE GEN HERE
+};
+*/
+//include!("codegen.rs");
+include!(concat!(env!("OUT_DIR"), "/codegen.rs"));
