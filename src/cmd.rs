@@ -2,20 +2,36 @@
 use phf::phf_map;
 use super::rtt_print;
 
+static mut TEST_REG : u32 = 0;
+
+
+#[repr(packed)]
+#[repr(C)]
+struct CmdFormatIn {
+    sign : u8,
+    op : Operation,
+    name_sz : u8,
+    value_sz : u8,
+    payload : [u8; 0x40 - 4],
+}
+
+#[repr(packed)]
+#[repr(C)]
+struct CmdFormatOut {
+    sign : u8,
+    op : Operation,
+    name_sz : u8,
+    value_sz : u8,
+    payload : [u8; 0x40 - 4],
+}
+
+
 pub fn parse_n_answer(buf : &mut[u8; 0x40]) -> usize {
-    #[repr(packed)]
-    #[repr(C)]
-    struct CmdIn {
-        sign : u8,
-        op : Operation,
-        name_sz : u8,
-        value_sz : u8,
-        payload : [u8; 0x40 - 4],
-    }
 
     let cmd: &mut CmdIn = unsafe { core::mem::transmute(buf.as_mut_ptr()) };
     let name: &str = unsafe { core::str::from_utf8_unchecked(&cmd.payload[0 .. cmd.name_sz as usize])};
-    match dispatch_blocking(cmd.op, name) {
+    let value : &u32 = unsafe { core::mem::transmute(cmd.payload.as_ptr().offset(cmd.name_sz as isize) )};
+    match dispatch_blocking(cmd.op, name, value) {
         Ok(RegType::u32V(value)) => {
             cmd.payload[cmd.name_sz as usize + 0] = value as u8;
             cmd.payload[cmd.name_sz as usize + 1] = (value >> 8) as u8;
@@ -32,7 +48,7 @@ pub fn parse_n_answer(buf : &mut[u8; 0x40]) -> usize {
     (4 + cmd.name_sz + cmd.value_sz) as usize
 }
 
-pub fn dispatch_blocking(op : Operation, name : &str) -> CmdResult {
+pub fn dispatch_blocking(op : Operation, name : &str, value : &u32) -> CmdResult {
 
     let e_num = STR_TO_ENUM.get(name).ok_or(Error::NoSuch)?;
     let e = &REGISTRY[*e_num as usize];
@@ -44,10 +60,12 @@ pub fn dispatch_blocking(op : Operation, name : &str) -> CmdResult {
         }
         (Operation::Read, Entity::Register(_r)) => {
             rtt_print!("Reading reg {}", name);
-            Ok(RegType::u32V(42))
+            let r = unsafe { TEST_REG };
+            Ok(RegType::u32V(r))
         }
         (Operation::Write, Entity::Register(_r)) => {
-            rtt_print!("Writing reg {}", name);
+            rtt_print!("Writing reg {}, value {}", name, value);
+            unsafe { TEST_REG = *value };
             Err(Error::Ok)
         }
         (_, _) => return Err(Error::WrongOperation),
@@ -59,6 +77,14 @@ pub fn dispatch_blocking(op : Operation, name : &str) -> CmdResult {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
 pub enum Operation {
+    Read = 0,
+    Write,
+    Erase,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug)]
+pub enum Answer {
     Read = 0,
     Write,
     Erase,
@@ -99,24 +125,4 @@ pub fn str_to_enum(s : &'static str) {
     rtt_print!("{:?}",  &c);
 }
 
-// CODE GEN PART
-/*
-const REGISTRY : [Entity; EntityNum::Max as usize] = [
-    CODE GEN HERE
-];
-*/
-
-/*
-enum EntityNum {
-    CODE GEN HERE
-    Max,
-}
-*/
-
-/*
-const STR_TO_ENUM : phf::Map<&'static str, EntityNum> = phf_map! {
-    CODE GEN HERE
-};
-*/
-//include!("codegen.rs");
 include!(concat!(env!("OUT_DIR"), "/codegen.rs"));
