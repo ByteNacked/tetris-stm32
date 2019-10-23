@@ -16,15 +16,5 @@ fn main() {
         .unwrap();
     println!("cargo:rustc-link-search={}", out.display());
 
-    let path = Path::new("scheme.rsl");
-    let txt = read_to_string(path).unwrap();
-    let txt = cmd_dsl::generate(txt);
-    let path = Path::new(&env::var("OUT_DIR").unwrap()).join("codegen.rs");
-    write(path, txt);
-
-
-    // Only re-run the build script when memory.x is changed,
-    // instead of when any part of the source code changes.
     println!("cargo:rerun-if-changed=memory.x");
-    println!("cargo:rerun-if-changed=scheme.rsl");
 }

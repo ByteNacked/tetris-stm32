@@ -1,22 +1,24 @@
-OpenDocument="lib.rs", FilePath="/home/romanm/.cargo/registry/src/github.com-1ecc6299db9ec823/cortex-m-rt-0.6.10/src/lib.rs", Line=0
-OpenDocument="main.rs", FilePath="/home/romanm/rust_proj/tetris-micro/src/main.rs", Line=61
+
+OpenDocument="lib.rs", FilePath="/home/romanm/rust_proj/tetris_nostd/src/lib.rs", Line=126
+OpenDocument="lib.rs", FilePath="/home/romanm/.cargo/registry/src/github.com-1ecc6299db9ec823/cortex-m-rt-0.6.10/src/lib.rs", Line=472
+OpenDocument="mod.rs", FilePath="/rustc/8a58268b5ad9c4a240be349a633069d48991eb0c/src/libcore/slice/mod.rs", Line=0
+OpenDocument="main.rs", FilePath="/home/romanm/rust_proj/tetris-stm32/src/main.rs", Line=59
 OpenToolbar="Debug", Floating=0, x=0, y=0
-OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=1, w=247, h=169, FilterBarShown=0
-OpenWindow="Registers 1", DockArea=RIGHT, x=0, y=0, w=247, h=292, FilterBarShown=0, FilteredItems=[], RefreshRate=1, ToolbarShown=1
-OpenWindow="Source Files", DockArea=LEFT, x=0, y=1, w=190, h=180, FilterBarShown=1
-OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=0, w=247, h=292, FilterBarShown=0, ExecCountersShown=0
-OpenWindow="Source", x=0, y=0, w=0, h=0, FilterBarShown=0, ExecCountersShown=0
-OpenWindow="Break & Tracepoints", DockArea=LEFT, x=0, y=0, w=190, h=146, FilterBarShown=0
-OpenWindow="Memory 1", DockArea=LEFT, x=0, y=2, w=190, h=146, FilterBarShown=0, EditorAddress=0x0
-OpenWindow="Global Data", DockArea=RIGHT, x=0, y=1, w=247, h=169, FilterBarShown=1
-OpenWindow="Local Data", DockArea=RIGHT, x=0, y=0, w=247, h=292, FilterBarShown=0
-OpenWindow="Functions", DockArea=LEFT, x=0, y=1, w=190, h=180, FilterBarShown=1
-OpenWindow="Terminal", DockArea=BOTTOM, x=0, y=0, w=1920, h=439, FilterBarShown=0
-TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols=["Function";"Stack Frame";"Source";"PC";"Return Address";"Stack Used"], ColWidths=[241;220;196;136;164;73]
-TableHeader="Local Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Scope"], ColWidths=[112;128;141;105;191;59]
-TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Auto";"Value";"Address";"Description"], ColWidths=[257;42;84;152;259]
-TableHeader="Source Files", SortCol="File", SortOrder="ASCENDING", VisibleCols=["File";"Status";"Size";"#Insts";"Path"], ColWidths=[118;59;48;57;854]
+OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=1, w=251, h=306, FilterBarShown=0, ToolBarShown=0
+OpenWindow="Registers 1", DockArea=RIGHT, x=0, y=0, w=251, h=246, FilterBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
+OpenWindow="Source Files", DockArea=LEFT, x=0, y=2, w=475, h=140, FilterBarShown=1, ToolBarShown=0
+OpenWindow="Disassembly", DockArea=LEFT, x=0, y=1, w=475, h=165, FilterBarShown=0, ToolBarShown=0, ExecCountersShown=0, InstEncodingsShown=0
+OpenWindow="Source", x=0, y=0, w=0, h=0, FilterBarShown=0, ToolBarShown=0, ExecCountersShown=0
+OpenWindow="Break & Tracepoints", DockArea=LEFT, x=0, y=0, w=475, h=275, FilterBarShown=0, ToolBarShown=0, VectorCatchIndexMask=0
+OpenWindow="Global Data", DockArea=RIGHT, x=0, y=1, w=251, h=306, FilterBarShown=1, ToolBarShown=0
+OpenWindow="Local Data", DockArea=RIGHT, x=0, y=0, w=251, h=246, FilterBarShown=0, ToolBarShown=0
+OpenWindow="Terminal", DockArea=BOTTOM, x=0, y=0, w=2493, h=357, FilterBarShown=0, ToolBarShown=0
 TableHeader="Global Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Scope"], ColWidths=[204;55;70;56;192;266]
-TableHeader="Break & Tracepoints", SortCol="None", SortOrder="ASCENDING", VisibleCols=["";"Type";"Location";"Extras"], ColWidths=[55;60;84;59]
-TableHeader="Functions", SortCol="Name", SortOrder="DESCENDING", VisibleCols=["Name";"Address";"Size";"#Insts";"Source"], ColWidths=[370;69;48;57;147]
-TableHeader="tableWidgetSamples", SortCol="Index", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Channel 0"], ColWidths=[84;119;126]
+TableHeader="Vector Catches", SortCol="None", SortOrder="ASCENDING", VisibleCols=["";"Vector Catch";"Description"], ColWidths=[50;300;500]
+TableHeader="Break & Tracepoints", SortCol="None", SortOrder="ASCENDING", VisibleCols=["";"Type";"Location";"Extras"], ColWidths=[55;60;84;334]
+TableHeader="Local Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Scope"], ColWidths=[112;128;141;105;191;59]
+TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols=["Function";"Stack Frame";"Source";"PC";"Return Address";"Stack Used"], ColWidths=[241;220;196;136;164;73]
+TableHeader="Source Files", SortCol="File", SortOrder="ASCENDING", VisibleCols=["File";"Status";"Size";"#Insts";"Path"], ColWidths=[118;59;48;57;742]
+TableHeader="Power Graph", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Channel 0"], ColWidths=[84;119;126]
+TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[257;42;84;259]
+TableHeader="RegisterSelectionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Auto";"Name";"Address";"Description"], ColWidths=[26;26;26;26]

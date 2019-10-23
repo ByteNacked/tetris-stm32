@@ -81,6 +81,7 @@ fn USB_LP_CAN_RX0() {
 }
 
 static mut USB_IRQ_CNT : u32 = 0;
+static mut CMD_PROC : ellocopo::Processor = ellocopo::Processor::new();
 fn usb_interrupt() {
     unsafe { USB_IRQ_CNT += 1; }
     let usb_dev = unsafe { USB_DEVICE.as_mut().unwrap() };
@@ -94,8 +95,11 @@ fn usb_interrupt() {
 
     match serial.read(&mut buf) {
         Ok(count) if count > 0 => {
-            use super::cmd::parse_n_answer;
-            let count = parse_n_answer(&mut buf);
+            let p = unsafe {&mut CMD_PROC };
+            let count = match p.process_try_answer(&mut buf, count) {
+                Ok(c) => c,
+                Err(_) => panic!(),
+            };
             serial.write(&buf[0..count]).ok();
         }
         _ => {}

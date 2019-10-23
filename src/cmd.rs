@@ -1,128 +1,93 @@
 
-use phf::phf_map;
-use super::rtt_print;
+use crate::rtt_print;
+use ellocopo::Error;
 
-static mut TEST_REG : u32 = 0;
-
-
-#[repr(packed)]
-#[repr(C)]
-struct CmdFormatIn {
-    sign : u8,
-    op : Operation,
-    name_sz : u8,
-    value_sz : u8,
-    payload : [u8; 0x40 - 4],
+#[no_mangle]
+pub fn cb_erase_name() -> Result<(), Error> {
+    rtt_print!("cb_erase_name");
+    Ok(())
 }
 
-#[repr(packed)]
-#[repr(C)]
-struct CmdFormatOut {
-    sign : u8,
-    op : Operation,
-    name_sz : u8,
-    value_sz : u8,
-    payload : [u8; 0x40 - 4],
+#[no_mangle]
+pub fn cb_write_name_test(v : i32) -> Result<(), Error> {
+    rtt_print!("cb_write_name_test: {}", v);
+    Ok(())
 }
 
-
-pub fn parse_n_answer(buf : &mut[u8; 0x40]) -> usize {
-
-    let cmd: &mut CmdIn = unsafe { core::mem::transmute(buf.as_mut_ptr()) };
-    let name: &str = unsafe { core::str::from_utf8_unchecked(&cmd.payload[0 .. cmd.name_sz as usize])};
-    let value : &u32 = unsafe { core::mem::transmute(cmd.payload.as_ptr().offset(cmd.name_sz as isize) )};
-    match dispatch_blocking(cmd.op, name, value) {
-        Ok(RegType::u32V(value)) => {
-            cmd.payload[cmd.name_sz as usize + 0] = value as u8;
-            cmd.payload[cmd.name_sz as usize + 1] = (value >> 8) as u8;
-            cmd.payload[cmd.name_sz as usize + 2] = (value >> 16) as u8;
-            cmd.payload[cmd.name_sz as usize + 3] = (value >> 24) as u8;
-            cmd.value_sz = 4;
-        }
-        Err(Error::Ok) => {
-            cmd.value_sz = 0;
-        }
-        _ => unimplemented!(),
-    };
-
-    (4 + cmd.name_sz + cmd.value_sz) as usize
+#[no_mangle]
+pub fn cb_read_name_test() -> Result<i32, Error> {
+    rtt_print!("cb_read_name_test");
+    Ok(-2777)
 }
 
-pub fn dispatch_blocking(op : Operation, name : &str, value : &u32) -> CmdResult {
-
-    let e_num = STR_TO_ENUM.get(name).ok_or(Error::NoSuch)?;
-    let e = &REGISTRY[*e_num as usize];
-
-    match (op, e) {
-        (Operation::Erase, Entity::Section) => {
-            rtt_print!("Erasing section {}", name);
-            Err(Error::Ok)
-        }
-        (Operation::Read, Entity::Register(_r)) => {
-            rtt_print!("Reading reg {}", name);
-            let r = unsafe { TEST_REG };
-            Ok(RegType::u32V(r))
-        }
-        (Operation::Write, Entity::Register(_r)) => {
-            rtt_print!("Writing reg {}, value {}", name, value);
-            unsafe { TEST_REG = *value };
-            Err(Error::Ok)
-        }
-        (_, _) => return Err(Error::WrongOperation),
-    }
+#[no_mangle]
+pub fn cb_write_name_test2(v : u8) -> Result<(), Error> {
+    rtt_print!("cb_write_name_test2: {}", v);
+    Ok(())
 }
 
-/// Types definition
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug)]
-pub enum Operation {
-    Read = 0,
-    Write,
-    Erase,
+#[no_mangle]
+pub fn cb_read_name_test2() -> Result<u8, Error> {
+    rtt_print!("cb_read_name_test2");
+    Ok(42)
 }
 
-#[repr(u8)]
-#[derive(Clone, Copy, Debug)]
-pub enum Answer {
-    Read = 0,
-    Write,
-    Erase,
+#[no_mangle]
+pub fn cb_write_name_test3(v : &'static str) -> Result<(), Error> {
+    rtt_print!("cb_write_name_test3: {}", v);
+    Ok(())
 }
 
-#[allow(non_camel_case_types)]
-#[derive(Clone, Copy, Debug)]
-pub enum RegType {
-    u32V(u32),
-    u8V(u8),
+#[no_mangle]
+pub fn cb_read_name_test3() -> Result<&'static str, Error> {
+    rtt_print!("cb_read_name_test3");
+    Ok("cb_read_name_test3")
 }
 
-pub enum Error {
-    Ok = 0,
-    WrongOperation,
-    BadFormat,
-    NoSuch,
-    NonWriteable,
-    Locked,
-    EraseNeeded,
+#[no_mangle]
+pub fn cb_erase_survey() -> Result<(), Error> {
+    rtt_print!("cb_erase_survey");
+    Ok(())
 }
 
-pub type CmdResult = Result<RegType, Error>;
-
-#[derive(Clone, Copy, Debug)]
-enum Entity {
-    Section,
-    Register(Register),
+#[no_mangle]
+pub fn cb_write_survey_name(v : &'static [u8]) -> Result<(), Error> {
+    rtt_print!("cb_write_survey_name : {:?}", v);
+    Ok(())
 }
 
-#[derive(Clone, Copy, Debug)]
-struct Register {
-    dummy : u32,
+#[no_mangle]
+pub fn cb_read_survey_name() -> Result<&'static [u8], Error> {
+    rtt_print!("cb_read_survey_name");
+    Ok(&[0xA5,0xA5])
 }
 
-pub fn str_to_enum(s : &'static str) {
-    let c = STR_TO_ENUM.get(s);
-    rtt_print!("{:?}",  &c);
+#[no_mangle]
+pub fn cb_write_survey_fam(v : i8) -> Result<(), Error> {
+    rtt_print!("cb_write_survey_fam: {}", v);
+    Ok(())
 }
 
-include!(concat!(env!("OUT_DIR"), "/codegen.rs"));
+#[no_mangle]
+pub fn cb_read_survey_fam() -> Result<i8, Error> {
+    rtt_print!("cb_read_survey_fam");
+    Ok(-5)
+}
+
+#[no_mangle]
+pub fn cb_erase_info() -> Result<(), Error> {
+    rtt_print!("cb_erase_info");
+    Ok(())
+}
+
+#[no_mangle]
+pub fn cb_write_info_lal(v : &'static str) -> Result<(), Error> {
+    rtt_print!("cb_write_info_lal: {}", v);
+    Ok(())
+}
+
+#[no_mangle]
+pub fn cb_read_info_lal() -> Result<&'static str, Error> {
+    rtt_print!("cb_read_info_lal");
+    Ok("cb_read_info_lal")
+}

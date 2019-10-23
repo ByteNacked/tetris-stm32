@@ -110,29 +110,6 @@ fn main() -> ! {
 
     unsafe { MONO_TIMER = Some(time::MonoTimer::new(cp.DWT, clocks)) };
 
-    {
-        let now = unsafe { MONO_TIMER.as_ref().unwrap().now() };       
-        cmd::str_to_enum("hard");
-        let msr_tick = now.elapsed() as f32;
-        let frq = unsafe { MONO_TIMER.as_ref().unwrap().frequency().0 } as f32;
-        let sec = 1000f32 / frq * msr_tick;
-        rtt_print!("PERF: tick : {}, sec : {}", msr_tick, sec);
-
-        let now = unsafe { MONO_TIMER.as_ref().unwrap().now() };       
-        cmd::str_to_enum("super/long/name/tarta/tatat/tatata");
-        let msr_tick = now.elapsed() as f32;
-        let frq = unsafe { MONO_TIMER.as_ref().unwrap().frequency().0 } as f32;
-        let sec = 1000f32 / frq * msr_tick;
-        rtt_print!("PERF: tick : {}, sec : {}", msr_tick, sec);
-
-        let now = unsafe { MONO_TIMER.as_ref().unwrap().now() };       
-        cmd::str_to_enum("hard/name");
-        let msr_tick = now.elapsed() as f32;
-        let frq = unsafe { MONO_TIMER.as_ref().unwrap().frequency().0 } as f32;
-        let sec = 1000f32 / frq * msr_tick;
-        rtt_print!("PERF: tick : {}, sec : {}", msr_tick, sec);
-    }
-
     let mut gpiog = unsafe { dp.GPIOG.steal() };
 
     port_init();

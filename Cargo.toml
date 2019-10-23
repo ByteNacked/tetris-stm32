@@ -15,9 +15,9 @@ embedded-hal = "0.2.3"
 jlink_rtt = "0.1.0"
 panic_rtt = "0.2.0"
 volatile-register = "0.2.0"
-phf = { version = "0.7.24", default-features = false, features = ["macros"]}
 usb-device = "0.2.3"
 stm32-usbd = { version = "0.4", features = ["stm32f103xx"] }
+ellocopo = "0.1"
 
 [dependencies.tetris_nostd]
 path = "../tetris_nostd"
@@ -26,14 +26,10 @@ path = "../tetris_nostd"
 version = "0.4.0"
 features = ["stm32f103", "rt"]
 
-[build-dependencies]
-cmd_dsl = "0.1"
-
 [patch.crates-io]
 stm32f1xx-hal = { path = "stm32f1xx-hal" }
 jlink_rtt = { path = "jlink_rtt-0.1.0" }
-phf = { path = "rust-phf/phf"}
-cmd_dsl = { path = "../cmd_dsl" }
+ellocopo = { path = "../ellocopo/ellocopo" }
 
 [[bin]]
 name = "tetris-micro"
