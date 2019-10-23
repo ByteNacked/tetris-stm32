@@ -1,11 +1,10 @@
 use std::env;
-use std::fs::File;
-use std::path::PathBuf;
-use std::io::{BufWriter, Write, BufReader, BufRead, Read};
-use std::path::Path;
 use std::fs::read_to_string;
 use std::fs::write;
-
+use std::fs::File;
+use std::io::{BufRead, BufReader, BufWriter, Read, Write};
+use std::path::Path;
+use std::path::PathBuf;
 
 fn main() {
     // Put the linker script somewhere the linker can find it

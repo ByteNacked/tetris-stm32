@@ -1,9 +1,9 @@
+use super::rtt_print;
 use core::ops::{Generator, GeneratorState};
 use core::pin::Pin;
 use cortex_m::asm;
-use cortex_m::asm::{delay, wfi, bkpt};
+use cortex_m::asm::{bkpt, delay, wfi};
 use cortex_m_rt::{entry, exception};
-use super::rtt_print;
 
 fn func1() -> u32 {
     1
@@ -13,13 +13,14 @@ fn func2() -> u32 {
     2
 }
 
-fn func3() -> u32{
+fn func3() -> u32 {
     3
 }
 
-const fn up_to(limit: u32) -> impl Generator<Yield = u32, Return = u32> + core::marker::Unpin + core::marker::Sized {
+const fn up_to(
+    limit: u32,
+) -> impl Generator<Yield = u32, Return = u32> + core::marker::Unpin + core::marker::Sized {
     move || {
-
         yield func1();
         yield func2();
         yield func3();
@@ -27,8 +28,6 @@ const fn up_to(limit: u32) -> impl Generator<Yield = u32, Return = u32> + core::
         return limit;
     }
 }
-
-
 
 fn test() {
     unsafe {
@@ -38,13 +37,11 @@ fn test() {
     }
 }
 
-static mut MY_GEN : impl Generator<Yield = u32, Return = u32> + core::marker::Unpin = up_to(2);
-
+static mut MY_GEN: impl Generator<Yield = u32, Return = u32> + core::marker::Unpin = up_to(2);
 
 #[allow(dead_code)]
 pub fn schedule() {
-
-    rtt_print!("Gen size {}", core::mem::size_of_val(unsafe{&MY_GEN}));
+    rtt_print!("Gen size {}", core::mem::size_of_val(unsafe { &MY_GEN }));
 
     //let b : SmallBox<dyn Generator<Yield=u32, Return = u32>, S4>= SmallBox::new(
     //    || {
@@ -54,13 +51,16 @@ pub fn schedule() {
     //        return 3;
     //    }
     //);
-    
-    match Pin::new(unsafe {&mut MY_GEN}).resume() {
-        GeneratorState::Yielded(num) => { rtt_print!("Step : {}", num); }
-        GeneratorState::Complete(_) => { rtt_print!("Finish step!"); }
+
+    match Pin::new(unsafe { &mut MY_GEN }).resume() {
+        GeneratorState::Yielded(num) => {
+            rtt_print!("Step : {}", num);
+        }
+        GeneratorState::Complete(_) => {
+            rtt_print!("Finish step!");
+        }
     }
 }
-
 
 #[exception]
 fn SVCall() {
@@ -78,8 +78,6 @@ fn SVCall() {
     //    : "volatile"
     //);
 
-
-
 }
 
 #[exception]
@@ -88,4 +86,3 @@ fn PendSV() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-

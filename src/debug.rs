@@ -1,4 +1,5 @@
 
+#[rustfmt::skip]
 #[macro_export]
 macro_rules! dbg_info {
     () => {

@@ -1,24 +1,12 @@
-
 mod monitor;
 
-use cortex_m::asm::{delay};
-use stm32f1xx_hal::stm32::{
-    interrupt,
-    Interrupt,
-};
-use stm32f1xx_hal:: {
-    prelude::*,
-    rcc::Clocks,
-    gpio::gpioa,
-    gpio::gpioc,
-};
-use stm32_usbd::{UsbBus, UsbBusType};
-use usb_device::{bus::UsbBusAllocator, prelude::*};
-use stm32f1xx_hal::pac::{
-    Peripherals,
-};
+use cortex_m::asm::delay;
 use embedded_hal::digital::v2::OutputPin;
-
+use stm32_usbd::{UsbBus, UsbBusType};
+use stm32f1xx_hal::pac::Peripherals;
+use stm32f1xx_hal::stm32::{interrupt, Interrupt};
+use stm32f1xx_hal::{gpio::gpioa, gpio::gpioc, prelude::*, rcc::Clocks};
+use usb_device::{bus::UsbBusAllocator, prelude::*};
 
 static mut USB_BUS: Option<UsbBusAllocator<UsbBusType>> = None;
 static mut USB_SERIAL: Option<monitor::MonitorDev<UsbBusType>> = None;
@@ -26,8 +14,7 @@ static mut USB_DEVICE: Option<UsbDevice<UsbBusType>> = None;
 const VID: u16 = 0x0483;
 const PID: u16 = 0x7503;
 
-pub fn usb_init(clocks : &Clocks) -> () {
-
+pub fn usb_init(clocks: &Clocks) -> () {
     assert!(clocks.usbclk_valid());
 
     let p = unsafe { cortex_m::Peripherals::steal() };
@@ -53,13 +40,12 @@ pub fn usb_init(clocks : &Clocks) -> () {
 
         USB_SERIAL = Some(monitor::MonitorDev::new(USB_BUS.as_ref().unwrap()));
 
-        let usb_dev =
-            UsbDeviceBuilder::new(USB_BUS.as_ref().unwrap(), UsbVidPid(VID, PID))
-                .manufacturer("Incart")
-                .product("Monitor")
-                .serial_number("TEST")
-                .max_packet_size_0(64)
-                .build();
+        let usb_dev = UsbDeviceBuilder::new(USB_BUS.as_ref().unwrap(), UsbVidPid(VID, PID))
+            .manufacturer("Incart")
+            .product("Monitor")
+            .serial_number("TEST")
+            .max_packet_size_0(64)
+            .build();
 
         USB_DEVICE = Some(usb_dev);
     }
@@ -80,10 +66,12 @@ fn USB_LP_CAN_RX0() {
     usb_interrupt();
 }
 
-static mut USB_IRQ_CNT : u32 = 0;
-static mut CMD_PROC : ellocopo::Processor = ellocopo::Processor::new();
+static mut USB_IRQ_CNT: u32 = 0;
+static mut CMD_PROC: ellocopo::Processor = ellocopo::Processor::new();
 fn usb_interrupt() {
-    unsafe { USB_IRQ_CNT += 1; }
+    unsafe {
+        USB_IRQ_CNT += 1;
+    }
     let usb_dev = unsafe { USB_DEVICE.as_mut().unwrap() };
     let serial = unsafe { USB_SERIAL.as_mut().unwrap() };
 
@@ -95,7 +83,7 @@ fn usb_interrupt() {
 
     match serial.read(&mut buf) {
         Ok(count) if count > 0 => {
-            let p = unsafe {&mut CMD_PROC };
+            let p = unsafe { &mut CMD_PROC };
             let count = match p.process_try_answer(&mut buf, count) {
                 Ok(c) => c,
                 Err(_) => panic!(),

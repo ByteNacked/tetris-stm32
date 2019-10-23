@@ -13,6 +13,7 @@ use crate::gpio::{
 
 pub trait AfioExt {
     fn constrain(self, apb2: &mut APB2) -> Parts;
+    unsafe fn steal(self) -> Parts;
 }
 
 impl AfioExt for AFIO {
@@ -21,6 +22,18 @@ impl AfioExt for AFIO {
         apb2.rstr().modify(|_, w| w.afiorst().set_bit());
         apb2.rstr().modify(|_, w| w.afiorst().clear_bit());
 
+        Parts {
+            evcr: EVCR { _0: () },
+            mapr: MAPR { _0: () },
+            exticr1: EXTICR1 { _0: () },
+            exticr2: EXTICR2 { _0: () },
+            exticr3: EXTICR3 { _0: () },
+            exticr4: EXTICR4 { _0: () },
+            mapr2: MAPR2 { _0: () },
+        }
+    }
+
+    unsafe fn steal(self) -> Parts {
         Parts {
             evcr: EVCR { _0: () },
             mapr: MAPR { _0: () },

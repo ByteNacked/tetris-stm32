@@ -1,9 +1,10 @@
 #![allow(dead_code)]
 
-const INPUT_ANALOG : u8 = 0;
-const INPUT_FLOAT : u8 = 1;
-const INPUT_PULL_UP_DOWN : u8 = 2;
+const INPUT_ANALOG: u8 = 0;
+const INPUT_FLOAT: u8 = 1;
+const INPUT_PULL_UP_DOWN: u8 = 2;
 
+#[rustfmt::skip]
 pub fn port_init() {
     use stm32f1xx_hal::pac::{
         RCC,
@@ -259,6 +260,7 @@ pub fn port_init() {
    //TODO: registers 
 }
 
+#[rustfmt::skip]
 pub fn fsmc_init() {
     use stm32f1xx_hal::pac::{
         RCC,

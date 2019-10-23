@@ -1,12 +1,10 @@
-
 #![allow(dead_code)]
 
-use stm32f1xx_hal::pac::{ GPIOG };
 use super::rtt_print;
+use stm32f1xx_hal::pac::GPIOG;
 
-pub static mut BUTTON_LEFT : Button<Left> = Button::new(Left{});
-pub static mut BUTTON_RIGHT : Button<Right> = Button::new(Right{});
-
+pub static mut BUTTON_LEFT: Button<Left> = Button::new(Left {});
+pub static mut BUTTON_RIGHT: Button<Right> = Button::new(Right {});
 
 pub trait ButtonPin {
     fn state(&self) -> State;
@@ -37,7 +35,7 @@ impl Into<State> for bool {
     fn into(self) -> State {
         match self {
             false => State::Pressed,
-            true  => State::Released,
+            true => State::Released,
         }
     }
 }
@@ -56,41 +54,39 @@ pub enum Press {
 }
 
 pub struct Button<P> {
-    prev : State,
-    p : Press,
-    press_len : u32,
-    pin : P,
+    prev: State,
+    p: Press,
+    press_len: u32,
+    pin: P,
 }
 
-impl<P : ButtonPin> Button<P> {
-    const fn new(pin : P) -> Self {
+impl<P: ButtonPin> Button<P> {
+    const fn new(pin: P) -> Self {
         Button {
-            prev : State::Released,
-            p : Press::None,
-            press_len : 0u32,
+            prev: State::Released,
+            p: Press::None,
+            press_len: 0u32,
             pin,
         }
     }
 
     pub fn update_state_100hz(&mut self) {
-
         let pin_state = self.pin.state();
 
         match self.prev {
             State::Pressed => {
                 if let State::Pressed = pin_state {
                     self.press_len += 1;
-                }
-                else {
+                } else {
                     self.prev = pin_state;
                     /*определение длины нажатия или его остутствия (джиттер)*/
                     match self.press_len {
-                        0 ..= 5   => (),
-                        6 ..= 255 => {
+                        0..=5 => (),
+                        6..=255 => {
                             self.p = Press::Short;
                             rtt_print!("Button press: {:?} in ticks {}", self.p, self.press_len);
                         }
-                        _         => {
+                        _ => {
                             self.p = Press::Long;
                             rtt_print!("Button press: {:?} in ticks {}", self.p, self.press_len);
                         }

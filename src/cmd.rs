@@ -1,4 +1,3 @@
-
 use crate::rtt_print;
 use ellocopo::Error;
 
@@ -9,7 +8,7 @@ pub fn cb_erase_name() -> Result<(), Error> {
 }
 
 #[no_mangle]
-pub fn cb_write_name_test(v : i32) -> Result<(), Error> {
+pub fn cb_write_name_test(v: i32) -> Result<(), Error> {
     rtt_print!("cb_write_name_test: {}", v);
     Ok(())
 }
@@ -21,7 +20,7 @@ pub fn cb_read_name_test() -> Result<i32, Error> {
 }
 
 #[no_mangle]
-pub fn cb_write_name_test2(v : u8) -> Result<(), Error> {
+pub fn cb_write_name_test2(v: u8) -> Result<(), Error> {
     rtt_print!("cb_write_name_test2: {}", v);
     Ok(())
 }
@@ -33,7 +32,7 @@ pub fn cb_read_name_test2() -> Result<u8, Error> {
 }
 
 #[no_mangle]
-pub fn cb_write_name_test3(v : &'static str) -> Result<(), Error> {
+pub fn cb_write_name_test3(v: &'static str) -> Result<(), Error> {
     rtt_print!("cb_write_name_test3: {}", v);
     Ok(())
 }
@@ -51,7 +50,7 @@ pub fn cb_erase_survey() -> Result<(), Error> {
 }
 
 #[no_mangle]
-pub fn cb_write_survey_name(v : &'static [u8]) -> Result<(), Error> {
+pub fn cb_write_survey_name(v: &'static [u8]) -> Result<(), Error> {
     rtt_print!("cb_write_survey_name : {:?}", v);
     Ok(())
 }
@@ -59,11 +58,11 @@ pub fn cb_write_survey_name(v : &'static [u8]) -> Result<(), Error> {
 #[no_mangle]
 pub fn cb_read_survey_name() -> Result<&'static [u8], Error> {
     rtt_print!("cb_read_survey_name");
-    Ok(&[0xA5,0xA5])
+    Ok(&[0xA5, 0xA5])
 }
 
 #[no_mangle]
-pub fn cb_write_survey_fam(v : i8) -> Result<(), Error> {
+pub fn cb_write_survey_fam(v: i8) -> Result<(), Error> {
     rtt_print!("cb_write_survey_fam: {}", v);
     Ok(())
 }
@@ -81,7 +80,7 @@ pub fn cb_erase_info() -> Result<(), Error> {
 }
 
 #[no_mangle]
-pub fn cb_write_info_lal(v : &'static str) -> Result<(), Error> {
+pub fn cb_write_info_lal(v: &'static str) -> Result<(), Error> {
     rtt_print!("cb_write_info_lal: {}", v);
     Ok(())
 }

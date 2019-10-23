@@ -11,7 +11,7 @@
 //
 //    let mut sb : EmbBox< dyn Generator<Yield = u32, Return = !> + core::marker::Unpin, [usize; 8]> = embbox!{
 //        || {
-//            
+//
 //            loop {
 //                yield 0u32;
 //                v.reg = 2;
@@ -58,7 +58,6 @@ pub struct EmbBox<T: ?Sized, Space> {
 }
 
 impl<T: ?Sized, Space> EmbBox<T, Space> {
-
     #[inline(always)]
     pub fn new(val: T) -> EmbBox<T, Space>
     where

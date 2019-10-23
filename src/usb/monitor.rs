@@ -1,9 +1,7 @@
 /// Minimal and incomplete CDC-ACM implementation for the examples - this will eventually be a real
 /// crate!
-
 use usb_device::class_prelude::*;
 use usb_device::Result;
-
 
 pub struct MonitorDev<'a, B: UsbBus> {
     comm_if: InterfaceNumber,
@@ -33,7 +31,6 @@ impl<B: UsbBus> MonitorDev<'_, B> {
     }
 
     pub fn read(&mut self, data: &mut [u8]) -> Result<usize> {
-
         self.len = match self.read_ep.read(&mut self.buf) {
             Ok(0) | Err(UsbError::WouldBlock) => return Ok(0),
             Ok(count) => count,
@@ -49,16 +46,11 @@ impl<B: UsbBus> MonitorDev<'_, B> {
 
 impl<B: UsbBus> UsbClass<B> for MonitorDev<'_, B> {
     fn get_configuration_descriptors(&self, writer: &mut DescriptorWriter) -> Result<()> {
-        writer.interface(
-            self.comm_if,
-            0xFF,
-            0x00,
-            0x00)?;
+        writer.interface(self.comm_if, 0xFF, 0x00, 0x00)?;
 
         writer.endpoint(&self.write_ep)?;
         writer.endpoint(&self.read_ep)?;
 
         Ok(())
     }
-
 }

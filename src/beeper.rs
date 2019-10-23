@@ -1,13 +1,11 @@
 #![allow(dead_code)]
 
-struct Beeper {
-
-} 
+struct Beeper {}
 
 #[derive(Copy, Clone)]
 struct Sound {
-    sound : u32,
-    count : u32,
+    sound: u32,
+    count: u32,
 }
 
 impl Beeper {
