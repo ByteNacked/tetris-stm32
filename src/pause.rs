@@ -7,7 +7,8 @@ pub fn pause(mili: MilliSeconds) {
         if let Some(t) = TIMER_PAUSE.as_mut() {
             t.start(mili);
             let _ = block!(t.wait());
+        } else {
+            panic!("No timer for pause!");
         }
-        else { panic!("No timer for pause!"); }
     }
 }

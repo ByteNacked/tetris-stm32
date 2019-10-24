@@ -21,6 +21,7 @@ mod cmd;
 mod debug;
 mod embbox;
 mod lcd;
+mod mega_adc;
 mod pause;
 mod pld;
 mod port;
@@ -28,7 +29,6 @@ mod sche;
 mod splash;
 mod tps;
 mod usb;
-mod mega_adc;
 
 use core::fmt::Binary;
 use core::panic::PanicInfo;
@@ -40,6 +40,7 @@ use embbox::EmbBox;
 use embedded_hal::digital::v2::OutputPin;
 pub(crate) use jlink_rtt::rtt_print;
 use lcd::{color::*, Lcd, Rect, FULL_SCREEN_RECT, LCD_HEIGHT, LCD_WIDTH};
+use mega_adc::MegaAdc;
 use nb::block;
 use pause::pause;
 use port::*;
@@ -54,7 +55,6 @@ use stm32f1xx_hal::{
     timer::{Event, Timer},
 };
 use tps::Tps;
-use mega_adc::MegaAdc;
 
 //#[panic_handler]
 //#[inline(never)]
@@ -192,9 +192,11 @@ fn main() -> ! {
     //MEGA_ADC
     let mut mega_adc = MegaAdc::new();
     mega_adc.init();
+    unsafe { MEGA_ADC = Some(mega_adc); }
+    let mega_adc_ref = unsafe { MEGA_ADC.as_mut().unwrap() };
 
     loop {
-        mega_adc.try_samples();
+        mega_adc_ref.try_samples();
         //pause(500.ms());
         //let _ = led_green.set_high();
         //let _ = led_red.set_low();
@@ -244,7 +246,9 @@ type I2C1Driver = stm32f1xx_hal::i2c::BlockingI2c<
 
 static mut I2C1_DRIVER: Option<I2C1Driver> = None;
 static mut TPS: Option<Tps<I2C1Driver>> = None;
-static mut MEGA_ADC : Option<MegaAdc> = None;
+static mut MEGA_ADC: Option<MegaAdc> = None;
+static mut ADC_FRAME: [i32; 16] = [0; 16];
+static mut AFE_FRAME: [i32; 4] = [0; 4];
 
 #[allow(dead_code)]
 fn game_iter(_tick: u32) {
@@ -440,6 +444,8 @@ fn RTC() {
     }
 
     //let _ = rtt_print!("TIM2 hz: {}", res);
+
+    rtt_print!("AFE_FRAME {:X?}", unsafe{&AFE_FRAME});
 }
 
 #[exception]
