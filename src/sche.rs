@@ -77,7 +77,6 @@ fn SVCall() {
     //    : "r0", "r1", "cc"
     //    : "volatile"
     //);
-
 }
 
 #[exception]

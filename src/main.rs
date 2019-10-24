@@ -12,6 +12,8 @@
 extern crate jlink_rtt;
 extern crate panic_rtt;
 
+#[macro_use]
+mod macros;
 mod adc;
 mod beeper;
 mod button;
@@ -20,11 +22,13 @@ mod debug;
 mod embbox;
 mod lcd;
 mod pause;
+mod pld;
 mod port;
 mod sche;
 mod splash;
 mod tps;
 mod usb;
+mod mega_adc;
 
 use core::fmt::Binary;
 use core::panic::PanicInfo;
@@ -50,6 +54,7 @@ use stm32f1xx_hal::{
     timer::{Event, Timer},
 };
 use tps::Tps;
+use mega_adc::MegaAdc;
 
 //#[panic_handler]
 //#[inline(never)]
@@ -177,16 +182,25 @@ fn main() -> ! {
         i2c1_ref = I2C1_DRIVER.as_mut().unwrap();
     }
 
+    //TPS
     let mut tps = tps::Tps::new(i2c1_ref);
-    tps.init();
+    let _ = tps.init();
+
+    //PLD
+    pld::pld_init();
+
+    //MEGA_ADC
+    let mut mega_adc = MegaAdc::new();
+    mega_adc.init();
 
     loop {
-        pause(500.ms());
-        let _ = led_green.set_high();
-        let _ = led_red.set_low();
-        pause(500.ms());
-        let _ = led_green.set_low();
-        let _ = led_red.set_high();
+        mega_adc.try_samples();
+        //pause(500.ms());
+        //let _ = led_green.set_high();
+        //let _ = led_red.set_low();
+        //pause(500.ms());
+        //let _ = led_green.set_low();
+        //let _ = led_red.set_high();
     }
 }
 
@@ -230,6 +244,7 @@ type I2C1Driver = stm32f1xx_hal::i2c::BlockingI2c<
 
 static mut I2C1_DRIVER: Option<I2C1Driver> = None;
 static mut TPS: Option<Tps<I2C1Driver>> = None;
+static mut MEGA_ADC : Option<MegaAdc> = None;
 
 #[allow(dead_code)]
 fn game_iter(_tick: u32) {

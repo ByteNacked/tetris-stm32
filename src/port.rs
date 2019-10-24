@@ -79,6 +79,19 @@ pub fn port_init() {
         });
     }
 
+    {  //GPIO B
+        let gpiob = unsafe { &*GPIOB::ptr() };
+        gpiob.odr.modify(|_, w| {
+            w
+            .odr13().low()
+        });
+
+        gpiob.crh.modify(|_, w| {
+            w
+            .mode13().output2()
+            .cnf13().push_pull()
+        });
+    }
 
     {  //GPIO C
         let gpioc = unsafe { &*GPIOC::ptr() };
@@ -131,6 +144,20 @@ pub fn port_init() {
             .cnf12().push_pull()
             .mode13().input()
             .cnf13().bits(INPUT_PULL_UP_DOWN)
+        });
+    }
+
+    {  //GPIO E
+        let gpioe = unsafe { &*GPIOE::ptr() };
+        gpioe.odr.modify(|_, w| {
+            w
+            .odr0().high()
+        });
+
+        gpioe.crl.modify(|_, w| {
+            w
+            .mode0().input()
+            .cnf0().bits(INPUT_FLOAT)
         });
     }
 
@@ -283,9 +310,9 @@ pub fn fsmc_init() {
          .extmod().disabled()
     });
     fsmc.btr1.modify(|_, w| unsafe {
-        w.addset().bits(1)
-         .datast().bits(1)
-         .addhld().bits(1)
+        w.addset().bits(12)
+         .datast().bits(15)
+         .addhld().bits(12)
          //.clkdiv().bits(1)
          //.busturn().bits(1)
          //.datlat().bits(0)

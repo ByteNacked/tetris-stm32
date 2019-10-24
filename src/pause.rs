@@ -1,4 +1,4 @@
-use super::TIMER_PAUSE;
+use crate::TIMER_PAUSE;
 use nb::block;
 use stm32f1xx_hal::{prelude::*, time::MilliSeconds};
 
@@ -8,5 +8,6 @@ pub fn pause(mili: MilliSeconds) {
             t.start(mili);
             let _ = block!(t.wait());
         }
+        else { panic!("No timer for pause!"); }
     }
 }

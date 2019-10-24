@@ -24,32 +24,32 @@ where
         let mut buf = [0u8; 1];
 
         let tr = [0x10, 0x31];
-        self.d.write(TPS_ADDR, &tr);
-        self.d.write_read(TPS_ADDR, &tr[..1], &mut buf);
+        let _ = self.d.write(TPS_ADDR, &tr);
+        let _ = self.d.write_read(TPS_ADDR, &tr[..1], &mut buf);
         rtt_print!("reg {:X} val {:X}", tr[0], buf[0]);
         assert_eq!(tr[1], buf[0]);
 
         let tr = [0x12, 0x3F];
-        self.d.write(TPS_ADDR, &tr);
-        self.d.write_read(TPS_ADDR, &tr[..1], &mut buf);
+        let _ = self.d.write(TPS_ADDR, &tr);
+        let _ = self.d.write_read(TPS_ADDR, &tr[..1], &mut buf);
         rtt_print!("reg {:X} val {:X}", tr[0], buf[0]);
         assert_eq!(tr[1], buf[0]);
 
         let tr = [0x14, 0x1F];
-        self.d.write(TPS_ADDR, &tr);
-        self.d.write_read(TPS_ADDR, &tr[..1], &mut buf);
+        let _ = self.d.write(TPS_ADDR, &tr);
+        let _ = self.d.write_read(TPS_ADDR, &tr[..1], &mut buf);
         rtt_print!("reg {:X} val {:X}", tr[0], buf[0]);
         assert_eq!(tr[1], buf[0]);
 
         let tr = [0x17, 0x3F];
-        self.d.write(TPS_ADDR, &tr);
-        self.d.write_read(TPS_ADDR, &tr[..1], &mut buf);
+        let _ = self.d.write(TPS_ADDR, &tr);
+        let _ = self.d.write_read(TPS_ADDR, &tr[..1], &mut buf);
         rtt_print!("reg {:X} val {:X}", tr[0], buf[0]);
         assert_eq!(tr[1], buf[0]);
 
         let tr = [0x04, 0x30];
-        self.d.write(TPS_ADDR, &tr);
-        self.d.write_read(TPS_ADDR, &tr[..1], &mut buf);
+        let _ = self.d.write(TPS_ADDR, &tr);
+        let _ = self.d.write_read(TPS_ADDR, &tr[..1], &mut buf);
         rtt_print!("reg {:X} val {:X}", tr[0], buf[0]);
         assert_eq!(tr[1], buf[0]);
 
