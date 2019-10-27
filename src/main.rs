@@ -29,6 +29,7 @@ mod sche;
 mod splash;
 mod tps;
 mod usb;
+mod cb;
 
 use core::fmt::Binary;
 use core::panic::PanicInfo;
@@ -40,7 +41,7 @@ use embbox::EmbBox;
 use embedded_hal::digital::v2::OutputPin;
 pub(crate) use jlink_rtt::rtt_print;
 use lcd::{color::*, Lcd, Rect, FULL_SCREEN_RECT, LCD_HEIGHT, LCD_WIDTH};
-use mega_adc::MegaAdc;
+use mega_adc::{ MegaAdc, AdcFrame, AfeFrame};
 use nb::block;
 use pause::pause;
 use port::*;
@@ -55,6 +56,7 @@ use stm32f1xx_hal::{
     timer::{Event, Timer},
 };
 use tps::Tps;
+use cb::CircularBuffer;
 
 //#[panic_handler]
 //#[inline(never)]
@@ -63,13 +65,6 @@ use tps::Tps;
 //    cortex_m::asm::bkpt();
 //    loop {}
 //}
-
-use core::ops::{Generator, GeneratorState};
-use core::pin::Pin;
-
-struct Valve {
-    pub reg: u32,
-}
 
 #[entry]
 fn main() -> ! {
@@ -190,13 +185,11 @@ fn main() -> ! {
     pld::pld_init();
 
     //MEGA_ADC
-    let mut mega_adc = MegaAdc::new();
+    let mega_adc = unsafe { &mut MEGA_ADC };
     mega_adc.init();
-    unsafe { MEGA_ADC = Some(mega_adc); }
-    let mega_adc_ref = unsafe { MEGA_ADC.as_mut().unwrap() };
 
     loop {
-        mega_adc_ref.try_samples();
+        read_from_mega_adc();
         //pause(500.ms());
         //let _ = led_green.set_high();
         //let _ = led_red.set_low();
@@ -204,6 +197,44 @@ fn main() -> ! {
         //let _ = led_green.set_low();
         //let _ = led_red.set_high();
     }
+}
+
+fn read_from_mega_adc() {
+    cortex_m::interrupt::free( |_cs| {
+        let mega_adc = unsafe { &mut MEGA_ADC };
+        let vb = unsafe { &mut VB };
+
+        mega_adc.try_samples(&mut |adc, afe| {
+            use core::mem::size_of;
+
+            if vb.is_full() {
+                rtt_print!("VB overflow!");
+            }
+
+            let adc_cnt = adc.cnt;
+            if adc_cnt % 1000 == 0 {
+                rtt_print!("{:?}", adc);
+            }
+
+            vb.enqueue(0x7E);
+            vb.enqueue(size_of::<AdcFrame>() as u8);
+            vb.enqueue(0x00);
+            vb.enqueue(0x81);
+            vb.enqueue_slice(adc.as_bytes());
+            vb.enqueue(0xFF);
+            vb.enqueue(0xFF);
+            vb.enqueue(0xBD);
+
+            //vb.enqueue(0x7E);
+            //vb.enqueue(size_of::<AfeFrame>() as u8);
+            //vb.enqueue(0x00);
+            //vb.enqueue(0x82);
+            //vb.enqueue_slice(afe.as_bytes());
+            //vb.enqueue(0xFF);
+            //vb.enqueue(0xFF);
+            //vb.enqueue(0xBD);
+        });       
+    });
 }
 
 static mut BLUE: Rect = Rect {
@@ -246,9 +277,8 @@ type I2C1Driver = stm32f1xx_hal::i2c::BlockingI2c<
 
 static mut I2C1_DRIVER: Option<I2C1Driver> = None;
 static mut TPS: Option<Tps<I2C1Driver>> = None;
-static mut MEGA_ADC: Option<MegaAdc> = None;
-static mut ADC_FRAME: [i32; 16] = [0; 16];
-static mut AFE_FRAME: [i32; 4] = [0; 4];
+static mut MEGA_ADC: MegaAdc = MegaAdc::new();
+static mut VB : CircularBuffer = CircularBuffer::new();
 
 #[allow(dead_code)]
 fn game_iter(_tick: u32) {
@@ -444,8 +474,6 @@ fn RTC() {
     }
 
     //let _ = rtt_print!("TIM2 hz: {}", res);
-
-    rtt_print!("AFE_FRAME {:X?}", unsafe{&AFE_FRAME});
 }
 
 #[exception]

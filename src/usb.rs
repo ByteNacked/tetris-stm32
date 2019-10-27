@@ -9,7 +9,7 @@ use stm32f1xx_hal::{gpio::gpioa, gpio::gpioc, prelude::*, rcc::Clocks};
 use usb_device::{bus::UsbBusAllocator, prelude::*};
 
 static mut USB_BUS: Option<UsbBusAllocator<UsbBusType>> = None;
-static mut USB_SERIAL: Option<monitor::MonitorDev<UsbBusType>> = None;
+static mut USB_MONITOR: Option<monitor::MonitorDev<UsbBusType>> = None;
 static mut USB_DEVICE: Option<UsbDevice<UsbBusType>> = None;
 const VID: u16 = 0x0483;
 const PID: u16 = 0x7503;
@@ -38,7 +38,7 @@ pub fn usb_init(clocks: &Clocks) -> () {
 
         USB_BUS = Some(bus);
 
-        USB_SERIAL = Some(monitor::MonitorDev::new(USB_BUS.as_ref().unwrap()));
+        USB_MONITOR = Some(monitor::MonitorDev::new(USB_BUS.as_ref().unwrap()));
 
         let usb_dev = UsbDeviceBuilder::new(USB_BUS.as_ref().unwrap(), UsbVidPid(VID, PID))
             .manufacturer("Incart")
@@ -73,23 +73,31 @@ fn usb_interrupt() {
         USB_IRQ_CNT += 1;
     }
     let usb_dev = unsafe { USB_DEVICE.as_mut().unwrap() };
-    let serial = unsafe { USB_SERIAL.as_mut().unwrap() };
+    let monitor = unsafe { USB_MONITOR.as_mut().unwrap() };
 
-    if !usb_dev.poll(&mut [serial]) {
+    if !usb_dev.poll(&mut [monitor]) {
         return;
     }
 
     let mut buf = [0u8; 0x40];
 
-    match serial.read(&mut buf) {
+    match monitor.read(&mut buf) {
         Ok(count) if count > 0 => {
             let p = unsafe { &mut CMD_PROC };
             let count = match p.process_try_answer(&mut buf, count) {
                 Ok(c) => c,
                 Err(_) => panic!(),
             };
-            serial.write(&buf[0..count]).ok();
+            monitor.write(&buf[0..count]).ok();
         }
         _ => {}
     }
+
+    use crate::VB;
+    match unsafe { VB.dequeue_slice(&mut buf) } {
+        n => {
+            let _ = monitor.vis(&buf[..n]);
+        }
+    }
+
 }

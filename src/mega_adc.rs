@@ -1,12 +1,16 @@
 #![allow(dead_code)]
 
+pub mod frame;
+
 use crate::pac::DWT;
 use crate::pld::{PldAdcMode, PldAfeFifoOut as PldAfeFifo, PldCfg, PldFifo, PldGie, PldIe, PldRdSpi, PldSpi};
 use crate::rtt_print;
-use crate::{ADC_FRAME, AFE_FRAME};
 //use cortex_m::asm::{dsb, dmb, isb, nop};
+pub use frame::{AdcFrame, AfeFrame};
 
 pub struct MegaAdc {
+    adc_frame: AdcFrame,
+    afe_frame: AfeFrame,
     cnt: u16,
     afe_cnt: u16,
     change: &'static tables::Change,
@@ -14,8 +18,10 @@ pub struct MegaAdc {
 
 
 impl MegaAdc {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         MegaAdc {
+            adc_frame: AdcFrame::new(),
+            afe_frame: AfeFrame::new(),
             cnt: 0,
             afe_cnt: 0,
             change: &tables::AD1298_CHANGE_12X10,
@@ -116,20 +122,19 @@ impl MegaAdc {
         // TODO: read-out tests
     }
 
-    pub fn try_samples(&mut self) {
+    pub fn try_samples(&mut self, cb : &mut impl FnMut(&AdcFrame, &AfeFrame) ) {
         while cmd::is_adc_rdy() {
-            match self.try_read_adc1298_fifo(unsafe { core::mem::transmute(&mut ADC_FRAME) }) {
-                Ok(_) => (),                 //rtt_print!("cnt : {}", self.cnt),
-                Err(_) => self.fifo_reset(), //rtt_print!("Adc fifo err"),
-            }
-            match self.try_read_afe_fifo(unsafe { core::mem::transmute(&mut AFE_FRAME) }) {
-                Ok(_) => (),                 //rtt_print!("cnt : {}", self.cnt),
-                Err(_) => self.fifo_reset(), //rtt_print!("Adc fifo err"),
+            match (self.try_read_adc1298_fifo(), self.try_read_afe_fifo()) {
+                (Ok(_), Ok(_)) => cb(&self.adc_frame, &self.afe_frame),
+                _ => self.fifo_reset(),
             }
         }
     }
 
-    pub fn try_read_adc1298_fifo(&mut self, buf: &mut [u32; 16]) -> Result<(), ()> {
+    pub fn try_read_adc1298_fifo(&mut self) -> Result<(), ()> {
+        // Дети, не повторяейте это дома
+        let buf : &mut [u32; 16 + 1] = unsafe { core::mem::transmute(&mut self.adc_frame) };
+
         // Вычитываем заголовок
         let head = PldFifo::get().read(); // голова проверка ниже по коду
         let _dummy = PldFifo::get().read(); // пустые вычитывания статусов
@@ -170,6 +175,9 @@ impl MegaAdc {
         let cnt = PldFifo::get().read(); // счётчик
         let _tail = PldFifo::get().read(); // Хвост 0xBDBD читаем но не проверяем
 
+        // Дописываем счетчик в кадр
+        buf[16] = cnt as u32;
+
         // контроль счетчика
         if cnt != self.cnt {
             rtt_print!("{} != {}", cnt, self.cnt);
@@ -178,8 +186,7 @@ impl MegaAdc {
         }
 
         self.cnt = cnt.wrapping_add(1);
-        // TODO: write cnt to output frame
-        busy_wait_cycles!(100);
+        //busy_wait_cycles!(100);
 
         Ok(())
     }
@@ -210,7 +217,7 @@ impl MegaAdc {
         cmd::adc_start();
     }
 
-    pub fn try_read_afe_fifo(&mut self, buf: &mut [u32; 4]) -> Result<(), ()> {
+    pub fn try_read_afe_fifo(&mut self) -> Result<(), ()> {
         // ------------Здесь закончился опрос ADS1298---------------------
         // ------------Теперь опрашиваем AFE4490-оксиметр-----------------
         //-------------Нужно вычитать 12 слов-----------------------------
@@ -230,6 +237,9 @@ impl MegaAdc {
         // -------------------------------------------------------------------------------------------
         // XXXX		Номер измерения в двоичном коде		10
         // BCBC		Маркер конца кадра								11
+
+        // Дети, не повторяейте это дома
+        let buf : &mut [u32; 4 + 1] = unsafe { core::mem::transmute(&mut self.afe_frame) };
 
         let head = PldAfeFifo::get().read();
         let cnt = PldAfeFifo::get().read();
@@ -255,6 +265,9 @@ impl MegaAdc {
 
         let _cnt = PldAfeFifo::get().read();
         let tail = PldAfeFifo::get().read();
+
+        // Дописываем счетчик в кадр
+        buf[4] = cnt as u32;
 
         // контроль счетчика
         if cnt != self.afe_cnt {
