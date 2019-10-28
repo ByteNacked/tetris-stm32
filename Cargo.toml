@@ -31,6 +31,9 @@ stm32f1xx-hal = { path = "stm32f1xx-hal" }
 jlink_rtt = { path = "jlink_rtt-0.1.0" }
 ellocopo = { path = "../ellocopo/ellocopo" }
 
+[build-dependencies]
+built = "0.3"
+
 [[bin]]
 name = "tetris-micro"
 test = false

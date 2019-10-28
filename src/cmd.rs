@@ -1,92 +1,168 @@
 use crate::rtt_print;
 use ellocopo::Error;
+use crate::pld::{PldPWMComp, PldPWMValve, PldAfeCmd_low, PldAfeCmd_high};
+
+pub mod built_info {
+   include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+static mut INF_CUR : u8 = 0x20;
+static mut RED_CUR : u8 = 0x20;
 
 #[no_mangle]
-pub fn cb_erase_name() -> Result<(), Error> {
-    rtt_print!("cb_erase_name");
+pub fn cb_erase_hard() -> Result<(), Error> {
+    unimplemented!()
+}
+
+#[no_mangle]
+pub fn cb_write_hard_comp(v : u16) -> Result<(), Error> {
+    PldPWMComp::get().write(v);
     Ok(())
 }
 
 #[no_mangle]
-pub fn cb_write_name_test(v: i32) -> Result<(), Error> {
-    rtt_print!("cb_write_name_test: {}", v);
+pub fn cb_read_hard_comp() -> Result<u16, Error> {
+    Ok(PldPWMComp::get().read())
+}
+
+#[no_mangle]
+pub fn cb_write_hard_valv(v : u16) -> Result<(), Error> {
+    PldPWMValve::get().write(v);
     Ok(())
 }
 
 #[no_mangle]
-pub fn cb_read_name_test() -> Result<i32, Error> {
-    rtt_print!("cb_read_name_test");
-    Ok(-2777)
+pub fn cb_read_hard_valv() -> Result<u16, Error> {
+    Ok(PldPWMValve::get().read())
 }
 
 #[no_mangle]
-pub fn cb_write_name_test2(v: u8) -> Result<(), Error> {
-    rtt_print!("cb_write_name_test2: {}", v);
+pub fn cb_write_hard_red(v : u8) -> Result<(), Error> {
+    unsafe { RED_CUR = v; }
+    let tmp : u16 = unsafe { ((RED_CUR as u16) << 8) | INF_CUR as u16 };
+    PldAfeCmd_low::get().write(tmp);
+    PldAfeCmd_high::get().write(0x2202);
     Ok(())
 }
 
 #[no_mangle]
-pub fn cb_read_name_test2() -> Result<u8, Error> {
-    rtt_print!("cb_read_name_test2");
-    Ok(42)
+pub fn cb_read_hard_red() -> Result<u8, Error> {
+    Ok(unsafe { RED_CUR })
 }
 
 #[no_mangle]
-pub fn cb_write_name_test3(v: &'static str) -> Result<(), Error> {
-    rtt_print!("cb_write_name_test3: {}", v);
+pub fn cb_write_hard_inf(v : u8) -> Result<(), Error> {
+    unsafe { INF_CUR = v; }
+    let tmp : u16 = unsafe { ((RED_CUR as u16) << 8) | INF_CUR as u16 };
+    PldAfeCmd_low::get().write(tmp);
+    PldAfeCmd_high::get().write(0x2202);
     Ok(())
 }
 
 #[no_mangle]
-pub fn cb_read_name_test3() -> Result<&'static str, Error> {
-    rtt_print!("cb_read_name_test3");
-    Ok("cb_read_name_test3")
-}
-
-#[no_mangle]
-pub fn cb_erase_survey() -> Result<(), Error> {
-    rtt_print!("cb_erase_survey");
-    Ok(())
-}
-
-#[no_mangle]
-pub fn cb_write_survey_name(v: &'static [u8]) -> Result<(), Error> {
-    rtt_print!("cb_write_survey_name : {:?}", v);
-    Ok(())
-}
-
-#[no_mangle]
-pub fn cb_read_survey_name() -> Result<&'static [u8], Error> {
-    rtt_print!("cb_read_survey_name");
-    Ok(&[0xA5, 0xA5])
-}
-
-#[no_mangle]
-pub fn cb_write_survey_fam(v: i8) -> Result<(), Error> {
-    rtt_print!("cb_write_survey_fam: {}", v);
-    Ok(())
-}
-
-#[no_mangle]
-pub fn cb_read_survey_fam() -> Result<i8, Error> {
-    rtt_print!("cb_read_survey_fam");
-    Ok(-5)
+pub fn cb_read_hard_inf() -> Result<u8, Error> {
+    Ok(unsafe { INF_CUR })
 }
 
 #[no_mangle]
 pub fn cb_erase_info() -> Result<(), Error> {
-    rtt_print!("cb_erase_info");
-    Ok(())
+    unimplemented!()
 }
 
 #[no_mangle]
-pub fn cb_write_info_lal(v: &'static str) -> Result<(), Error> {
-    rtt_print!("cb_write_info_lal: {}", v);
-    Ok(())
+pub fn cb_write_info_version(_v : &'static str) -> Result<(), Error> {
+    Err(Error::NonWriteable)
 }
 
 #[no_mangle]
-pub fn cb_read_info_lal() -> Result<&'static str, Error> {
-    rtt_print!("cb_read_info_lal");
-    Ok("cb_read_info_lal")
+pub fn cb_read_info_version() -> Result<&'static str, Error> {
+    Ok(built_info::PKG_VERSION)
 }
+
+#[no_mangle]
+pub fn cb_erase_build() -> Result<(), Error> {
+    unimplemented!()
+}
+
+#[no_mangle]
+pub fn cb_write_build_version(_v : &'static str) -> Result<(), Error> {
+    Err(Error::NonWriteable)
+}
+
+#[no_mangle]
+pub fn cb_read_build_version() -> Result<&'static str, Error> {
+     Ok(built_info::PKG_VERSION)
+}
+
+#[no_mangle]
+pub fn cb_write_build_compiler(_v : &'static str) -> Result<(), Error> {
+    Err(Error::NonWriteable)
+}
+
+#[no_mangle]
+pub fn cb_read_build_compiler() -> Result<&'static str, Error> {
+     Ok(built_info::RUSTC_VERSION)
+}
+
+#[no_mangle]
+pub fn cb_write_build_git(_v : &'static str) -> Result<(), Error> {
+    Err(Error::NonWriteable)
+}
+
+#[no_mangle]
+pub fn cb_read_build_git() -> Result<&'static str, Error> {
+    Ok(built_info::GIT_VERSION.unwrap_or("None"))
+}
+
+#[no_mangle]
+pub fn cb_write_build_time(_v : &'static str) -> Result<(), Error> {
+    Err(Error::NonWriteable)
+}
+
+#[no_mangle]
+pub fn cb_read_build_time() -> Result<&'static str, Error> {
+    Ok(built_info::BUILT_TIME_UTC)
+}
+
+#[no_mangle]
+pub fn cb_write_build_target(_v : &'static str) -> Result<(), Error> {
+    Err(Error::NonWriteable)
+}
+
+#[no_mangle]
+pub fn cb_read_build_target() -> Result<&'static str, Error> {
+    Ok(built_info::TARGET)
+}
+
+#[no_mangle]
+pub fn cb_write_build_host(_v : &'static str) -> Result<(), Error> {
+    Err(Error::NonWriteable)
+}
+
+#[no_mangle]
+pub fn cb_read_build_host() -> Result<&'static str, Error> {
+    Ok(built_info::HOST)
+}
+
+#[no_mangle]
+pub fn cb_write_build_profile(_v : &'static str) -> Result<(), Error> {
+    Err(Error::NonWriteable)
+}
+
+#[no_mangle]
+pub fn cb_read_build_profile() -> Result<&'static str, Error> {
+    Ok(built_info::PROFILE)
+}
+
+#[no_mangle]
+pub fn cb_write_build_authors(_v : &'static str) -> Result<(), Error> {
+    Err(Error::NonWriteable)
+}
+
+#[no_mangle]
+pub fn cb_read_build_authors() -> Result<&'static str, Error> {
+    Ok(built_info::PKG_AUTHORS)
+}
+
+
+

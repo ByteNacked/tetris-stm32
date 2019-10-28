@@ -183,6 +183,7 @@ fn main() -> ! {
 
     //PLD
     pld::pld_init();
+    pld::pld_enable_pwm();
 
     //MEGA_ADC
     let mega_adc = unsafe { &mut MEGA_ADC };

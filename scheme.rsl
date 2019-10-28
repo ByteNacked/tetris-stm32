@@ -1,14 +1,21 @@
-Name {
-    test : u32,
-    test2 : u32,
-    test3 : u32,
-}
-
-Survey {
-    name : u32,
-    fam : u23,
+Hard {
+    comp: u16,
+    valv : u16,
+    i_red: u8,
+    i_inf: u8,
 }
 
 Info {
-    lal : u32,
+    version: str,
+}
+
+Build {
+    version : str,
+    compiler: str,
+    git: str,
+    time: str,
+    target: str,
+    host: str,
+    profile: str,
+    authors: str,
 }
