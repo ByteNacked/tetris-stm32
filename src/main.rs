@@ -10,6 +10,8 @@
 #![allow(dead_code)]
 
 extern crate jlink_rtt;
+
+#[cfg(debug_assertions)]
 extern crate panic_rtt;
 
 #[macro_use]
@@ -58,16 +60,21 @@ use stm32f1xx_hal::{
 use tps::Tps;
 use cb::CircularBuffer;
 
-//#[panic_handler]
-//#[inline(never)]
-//fn panic(_info: &PanicInfo) -> ! {
-//    #[cfg(debug_assertions)]
-//    cortex_m::asm::bkpt();
-//    loop {}
-//}
+#[cfg(not(debug_assertions))]
+#[panic_handler]
+#[inline(never)]
+fn panic(_info: &PanicInfo) -> ! {
+    int_disable();
+    rtt_print!("Panic handler! Reseting...");
+    
+    cortex_m::peripheral::SCB::sys_reset()
+}
 
 #[entry]
 fn main() -> ! {
+    rtt_print!("Starting..\n");
+    unsafe { int_enable(); }
+
     let cp = cortex_m::Peripherals::take().unwrap();
     let dp = pac::Peripherals::take().unwrap();
 
