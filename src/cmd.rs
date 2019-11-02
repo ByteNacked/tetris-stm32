@@ -8,10 +8,12 @@ pub mod built_info {
 
 static mut INF_CUR : u8 = 0x20;
 static mut RED_CUR : u8 = 0x20;
+static mut ECHO_BUF : [u8;0x40] = [0;0x40];
+static mut ECHO_BUF_SZ : usize = 0;
 
 #[no_mangle]
 pub fn cb_erase_hard() -> Result<(), Error> {
-    unimplemented!()
+    Ok(())
 }
 
 #[no_mangle]
@@ -66,7 +68,7 @@ pub fn cb_read_hard_inf() -> Result<u8, Error> {
 
 #[no_mangle]
 pub fn cb_erase_info() -> Result<(), Error> {
-    unimplemented!()
+    Ok(())
 }
 
 #[no_mangle]
@@ -81,7 +83,7 @@ pub fn cb_read_info_version() -> Result<&'static str, Error> {
 
 #[no_mangle]
 pub fn cb_erase_build() -> Result<(), Error> {
-    unimplemented!()
+    Ok(())
 }
 
 #[no_mangle]
@@ -164,5 +166,71 @@ pub fn cb_read_build_authors() -> Result<&'static str, Error> {
     Ok(built_info::PKG_AUTHORS)
 }
 
+#[no_mangle]
+pub fn cb_erase_test() -> Result<(), Error> {
+    Ok(())
+}
 
+#[no_mangle]
+pub fn cb_write_test_echo(v : &'static [u8]) -> Result<(), Error> {
+    unsafe {
+        ECHO_BUF_SZ = v.len();
+        (&mut ECHO_BUF[..ECHO_BUF_SZ]).copy_from_slice(v);
+    }
+    Ok(())
+}
 
+#[no_mangle]
+pub fn cb_read_test_echo() -> Result<&'static [u8], Error> {
+    unsafe { Ok(&ECHO_BUF[..ECHO_BUF_SZ]) }
+}
+
+#[no_mangle]
+pub fn cb_write_test_test1(_v : &'static [u8]) -> Result<(), Error> {
+    Err(Error::NonWriteable)
+}
+
+#[no_mangle]
+pub fn cb_read_test_test1() -> Result<&'static [u8], Error> {
+    Ok(b"\"Oh, you can't help that,\" said the Cat:")
+}
+
+#[no_mangle]
+pub fn cb_write_test_test2(_v : &'static [u8]) -> Result<(), Error> {
+    Err(Error::NonWriteable)
+}
+
+#[no_mangle]
+pub fn cb_read_test_test2() -> Result<&'static [u8], Error> {
+    Ok(b"\"we're all mad here. I'm mad. You're mad.\"")
+}
+
+#[no_mangle]
+pub fn cb_write_test_test3(_v : &'static [u8]) -> Result<(), Error> {
+    Err(Error::NonWriteable)
+}
+
+#[no_mangle]
+pub fn cb_read_test_test3() -> Result<&'static [u8], Error> {
+    Ok(b"\"How do you know I'm mad?\" said Alice.")
+}
+
+#[no_mangle]
+pub fn cb_write_test_test4(_v : &'static [u8]) -> Result<(), Error> {
+    Err(Error::NonWriteable)
+}
+
+#[no_mangle]
+pub fn cb_read_test_test4() -> Result<&'static [u8], Error> {
+    Ok(b"\"You must be,\" said the Cat,")
+}
+
+#[no_mangle]
+pub fn cb_write_test_test5(_v : &'static [u8]) -> Result<(), Error> {
+    Err(Error::NonWriteable)
+}
+
+#[no_mangle]
+pub fn cb_read_test_test5() -> Result<&'static [u8], Error> {
+    Ok(b"or you wouldn't have come here.\"")
+}
