@@ -1,7 +1,7 @@
 cargo-features = ["profile-overrides"] 
 
 [package]
-authors = ["Роман Масленников <m3angreen@gmail.com>"]
+authors = ["Roman Maslennikov <m3angreen@gmail.com>"]
 edition = "2018"
 readme = "README.md"
 name = "tetris-micro"
