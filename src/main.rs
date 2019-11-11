@@ -75,7 +75,7 @@ fn main() -> ! {
     rtt_print!("Starting..\n");
     unsafe { int_enable(); }
 
-    let cp = cortex_m::Peripherals::take().unwrap();
+    let mut cp = cortex_m::Peripherals::take().unwrap();
     let dp = pac::Peripherals::take().unwrap();
 
     let mut flash = dp.FLASH.constrain();
@@ -85,6 +85,12 @@ fn main() -> ! {
     //nvic.enable(Interrupt::USB_LP_CAN_RX0);
 
     let clocks = rcc.cfgr.freeze_72Mhz_usb(&mut flash.acr);
+
+    //debug mode shenanigans
+    {
+        cp.DCB.enable_trace();
+        cp.DWT.enable_cycle_counter();
+    }
 
     unsafe { MONO_TIMER = Some(time::MonoTimer::new(cp.DWT, clocks)) };
 
